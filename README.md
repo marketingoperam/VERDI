@@ -1,5 +1,4 @@
-# AI-поисковик конкурентов (Verdi Monitor)
-
+# VERDI — AI-поисковик конкурентов (Verdi Monitor)
 Веб-сервис для мониторинга конкурентов по **Google**, **Яндекс**, **VK** и **Telegram** с AI-анализом находок.
 
 ## Стек
@@ -109,4 +108,3 @@ docker-compose.yml
 - Дедупликация по `source + external_id` или hash текста/URL.
 - Telegram требует предварительной авторизации (`telegram_login.py`).
 - VK `wall.get` для групп использует отрицательный `owner_id`.
-- Фоновый мониторинг запускается Celery Beat по `MONITOR_INTERVAL_HOURS`.
