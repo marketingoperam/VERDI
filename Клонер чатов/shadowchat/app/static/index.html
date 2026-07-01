@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShadowChat — Панель управления</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body style="background:#0c0e14;color:#e8eaef;margin:0">
+  <noscript>
+    <div style="padding:40px;font-family:sans-serif">
+      <h1>ShadowChat</h1>
+      <p>Для работы панели нужен JavaScript. Включите его в браузере.</p>
+    </div>
+  </noscript>
+  <div id="loadError" style="display:none;padding:40px;font-family:sans-serif;background:#1a1d27;color:#fff;min-height:100vh">
+    <h1>ShadowChat</h1>
+    <p id="loadErrorText">Сервер не отвечает. Запустите <code>start.bat</code> и обновите страницу.</p>
+    <button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;cursor:pointer">Обновить</button>
+  </div>
+  <div class="app" id="appRoot">
+    <aside class="sidebar">
+      <div class="logo">
+        <h1>ShadowChat</h1>
+        <span>Зеркалирование чатов</span>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span><span>Главная</span></button>
+        <button class="nav-item" data-page="chats"><span class="icon">💬</span><span>Чаты</span></button>
+        <button class="nav-item" data-page="accounts"><span class="icon">👤</span><span>Аккаунты</span></button>
+        <button class="nav-item" data-page="employees"><span class="icon">👥</span><span>Сотрудники</span></button>
+        <button class="nav-item" data-page="logs"><span class="icon">📋</span><span>Журнал</span></button>
+        <button class="nav-item" data-page="settings"><span class="icon">⚙️</span><span>Настройки</span></button>
+        <button class="nav-item" data-page="help"><span class="icon">❓</span><span>Помощь</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="status-pill">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Загрузка...</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Dashboard -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h2>Главная</h2>
+            <p>Обзор системы и быстрый старт</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="App.refreshDashboard()">↻ Обновить</button>
+        </div>
+        <div class="cards" id="dashCards"></div>
+        <div class="panel">
+          <div class="panel-header"><h3>Настройка системы</h3><span id="setupPercent" class="badge badge-info">0%</span></div>
+          <div class="panel-body">
+            <div class="progress-bar"><div class="progress-fill" id="setupProgress" style="width:0%"></div></div>
+            <ul class="setup-steps" id="setupSteps"></ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Последние события</h3></div>
+          <div class="panel-body table-wrap" id="recentLogs"></div>
+        </div>
+      </section>
+
+      <!-- Chats -->
+      <section class="page" id="page-chats">
+        <div class="page-header">
+          <div>
+            <h2>Чаты</h2>
+            <p>Пары исходный чат → зеркало для обучения</p>
+          </div>
+          <button class="btn btn-primary" onclick="App.openModal('chatPair')">+ Добавить пару чатов</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="chatsTable"></div>
+        </div>
+      </section>
+
+      <!-- Accounts -->
+      <section class="page" id="page-accounts">
+        <div class="page-header">
+          <div>
+            <h2>Технические аккаунты</h2>
+            <p>Обычные Telegram-аккаунты, которые садятся в зеркальный чат. Привязка к сотрудникам — автоматически.</p>
+          </div>
+          <button class="btn btn-primary" onclick="App.openModal('account')">+ Добавить / импорт</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="accountsTable"></div>
+        </div>
+      </section>
+
+      <!-- Employees -->
+      <section class="page" id="page-employees">
+        <div class="page-header">
+          <div>
+            <h2>Сотрудники</h2>
+            <p>Автоматически добавляются при первом сообщении в исходном чате</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="employeesTable"></div>
+        </div>
+      </section>
+
+      <!-- Logs -->
+      <section class="page" id="page-logs">
+        <div class="page-header">
+          <div>
+            <h2>Журнал репликации</h2>
+            <p>История зеркалирования сообщений</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="App.loadLogs()">↻ Обновить</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="logsTable"></div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <div>
+            <h2>Настройки</h2>
+            <p>Поведение системы зеркалирования</p>
+          </div>
+          <button class="btn btn-primary" onclick="App.saveSettings()">Сохранить</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body" id="settingsForm"></div>
+        </div>
+      </section>
+
+      <!-- Help -->
+      <section class="page" id="page-help">
+        <div class="page-header">
+          <div>
+            <h2>Помощь</h2>
+            <p>Пошаговая инструкция для запуска</p>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="helpContent"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Форма</h3>
+        <button class="modal-close" onclick="App.closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

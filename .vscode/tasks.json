@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Verdi: открыть панель в браузере Cursor",
+      "type": "vscode",
+      "command": "simpleBrowser.show",
+      "args": ["http://127.0.0.1:5173"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Клонер чатов: открыть ShadowChat",
+      "type": "vscode",
+      "command": "simpleBrowser.show",
+      "args": ["http://127.0.0.1:8001"],
+      "problemMatcher": []
+    }
+  ]
+}

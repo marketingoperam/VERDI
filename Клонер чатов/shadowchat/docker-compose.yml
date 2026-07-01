@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shadowchat
+      POSTGRES_PASSWORD: shadowchat
+      POSTGRES_DB: shadowchat
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shadowchat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build: .
+    command: alembic upgrade head
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://shadowchat:shadowchat@db:5432/shadowchat
+      REDIS_URL: redis://redis:6379/0
+      SESSIONS_DIR: sessions
+      MEDIA_CACHE_DIR: media_cache
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://shadowchat:shadowchat@db:5432/shadowchat
+      REDIS_URL: redis://redis:6379/0
+      SESSIONS_DIR: sessions
+      MEDIA_CACHE_DIR: media_cache
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./sessions:/app/sessions
+      - ./media_cache:/app/media_cache
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  profile-worker:
+    build: .
+    command: python -m app.workers.sync_profiles
+    env_file: .env
+    volumes:
+      - ./sessions:/app/sessions
+      - ./media_cache:/app/media_cache
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    profiles:
+      - profile-sync
+
+  cleanup:
+    build: .
+    command: python -m app.workers.cleanup_temp_files
+    env_file: .env
+    volumes:
+      - ./media_cache:/app/media_cache
+    profiles:
+      - maintenance
+
+volumes:
+  pgdata:

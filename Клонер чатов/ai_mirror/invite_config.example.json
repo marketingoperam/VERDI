@@ -1,0 +1,11 @@
+{
+  "session_name": "tech_79534929552",
+  "target_chat_id": -1003763950759,
+  "target_chat_title": "Клон откуда",
+  "delay_seconds": 3,
+  "users": [
+    "@username1",
+    "@username2"
+  ],
+  "notes": "target_chat_id — единственный чат, куда идут инвайты. Остальные чаты мультичата не трогаем."
+}

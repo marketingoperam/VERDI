@@ -1,0 +1,41 @@
+# Секреты и ключи
+.env
+**/.env
+!**/.env.example
+
+# Telegram-сессии (авторизация аккаунтов)
+**/*.session
+**/*.session-journal
+**/sessions/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / frontend build
+node_modules/
+dist/
+*.local
+
+# Docker / БД
+pgdata/
+**/pgdata/
+
+# Временные и кэш
+output/
+**/cache/
+**/.cache/
+
+# Локальные данные ShadowChat (сессии в SQLite)
+Клонер чатов/shadowchat/data/*.db
+Клонер чатов/shadowchat/data/*.db-*
+Клонер чатов/shadowchat/data/qr_*.html
+
+# OS
+.DS_Store
+Thumbs.db

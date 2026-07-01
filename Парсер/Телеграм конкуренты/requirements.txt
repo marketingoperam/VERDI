@@ -1,0 +1,10 @@
+telethon
+python-dotenv
+pysocks
+python-socks[asyncio]
+qrcode[pil]
+pillow
+python-docx
+playwright
+beautifulsoup4
+requests

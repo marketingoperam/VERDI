@@ -1,0 +1,770 @@
+[
+  {
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/deed.ru",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 4,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/%D0%93%D1%80%D1%83%D0%BF%D0%BF%D0%B0",
+      "https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%82%D0%B5%D0%B3%D0%BE%D1%80%D0%B8%D1%8F:%D0%9C%D1%83%D0%B7%D1%8B%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D0%BA%D0%BE%D0%BB%D0%BB%D0%B5%D0%BA%D1%82%D0%B8%D0%B2%D1%8B_%D0%BF%D0%BE_%D0%B0%D0%BB%D1%84%D0%B0%D0%B2%D0%B8%D1%82%D1%83",
+      "https://ru.wikipedia.org/wiki/Instagram",
+      "https://ru.wiktionary.org/wiki/%D0%B3%D1%80%D1%83%D0%BF%D0%BF%D0%B0"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "сохран"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://www.gstatic.com/og/_/ss/k=og.qtm.dx8igAtVUKc.L.W.O/m=qmd,qcwid,d_b_gm3,d_wi_gm3,d_lo_gm3/excm=qaaw,qabr,qadd,qaid,qalo,qebr,qein,qhaw,qhawgm3,qhba,qhbr,qhbrgm3,qhch,qhchgm3,qhga,qhid,qhidgm3,qhin,qhlo,qhlogm3,qhmn,qhpc,qhsf,qhsfgm3,qhtt/d=1/ed=1/ct=zgms/rs=AA2YrTuRXSIc6ZAkT0f0eC2Gvh5vLRXhMw",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 4,
+    "source_pages": [
+      "https://translate.google.ca/",
+      "https://translate.google.com/?hl=ru",
+      "https://translate.google.kz/",
+      "https://translate.google.ru/"
+    ],
+    "matched_instagram_terms": [
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service",
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://www.vedomosti.ru/sport/football/articles/2022/11/21/951411-krishtianu-ronaldu-stal-pervim-chelovekom-s-500-mln-podpischikov-v-populyarnoi-sotsseti",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 2,
+    "source_pages": [
+      "https://ru.ruwiki.ru/wiki/Instagram",
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "pod"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=XXIX2WnfbpEu0026list=RDXXIX2WnfbpEu0026start_radio=1",
+    "platform": "youtube",
+    "kind": "service_or_article",
+    "source_count": 2,
+    "source_pages": [
+      "https://www.ladygaga.com/",
+      "https://www.ladygaga.com/us"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "shop"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=xGaZBfJOyAcu0026list=RDxGaZBfJOyAcu0026start_radio=1",
+    "platform": "youtube",
+    "kind": "service_or_article",
+    "source_count": 2,
+    "source_pages": [
+      "https://www.ladygaga.com/",
+      "https://www.ladygaga.com/us"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "shop"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://youtu.be/R3gpbT-JZMk?si=iPocADMnDxWuaC1p",
+    "platform": "youtube",
+    "kind": "service_or_article",
+    "source_count": 2,
+    "source_pages": [
+      "https://www.ladygaga.com/",
+      "https://www.ladygaga.com/us"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "shop"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "http://dx.doi.org/10.1016/j.bushor.2018.02.002",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "http://dx.doi.org/10.1080/10641734.2017.1372321",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "http://dx.doi.org/10.1080/19368623.2018.1382415",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "http://growthhacks.ru/2013/05/uspeh-instagram-samy-j-polny-j-material-s-kommentariyami-ot-pervy-h-pol-zovatelej/",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "коммент"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://accounts.google.com/ServiceLogin?service=youtubeu0026uilel=3u0026passive=trueu0026continue=http%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Dru%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252Fchannel%252FUC07Kxew-cMIaykMOkzqHtBQ%26feature%3Div%26continue_action%3DQUFFLUhqa0RqMS1OSTl0M2dxM2xZbFQ1WGZ4NEp2Y0h2UXxBQ3Jtc0trVjRXc2kwZnpUTjdGRF8xTTlyc0t1NmlPR2t3Qm5vdGc4TDRjVWJ3UndWd3Jxa0pPTVlBRktOamRVTVprY0tWVVUtSURjMWJrSmJrNkVvRXJDeWlBWXdpS2tQX28wampoTmJuLS1HTHRldzctSVlZU3hhS0hWSERWQkN3QmtNbXBfQUxtbldpMXo4Y0ZMLVBnRnRMZXV2TnVlajhod1p6MFFlVl9DRkQ3RHNySl9VOUlwNlFsZTV1SUJYaE1VWkpFMF9OdDY%253Du0026hl=ru",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=qrO4YZeyl0I"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://accounts.google.com/ServiceLogin?service=youtubeu0026uilel=3u0026passive=trueu0026continue=http%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Dru%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252Fchannel%252FUC07Kxew-cMIaykMOkzqHtBQ%26feature%3Div-endscreen%26continue_action%3DQUFFLUhqbkhFR1E1Mm1DMFVvbHVhS0wwVW9KRUVBc1Rid3xBQ3Jtc0trSmUweVlnd2VQbE92Z0h1Qi1jVmNMRjNBdDdiM3JnTWl1ZERQX3ozX3hZRVFFSVhFbTNieC04M3JISnhTWU5IWlNFaE1DdFpTTmRUeHZuYXZ5Y2ttZkxFTGFZazYycFVmM1RKRFV1dkhndXl0Ql9tRlZYSWcwZ2h5RXIzWWp5eFJFUmZ1by1ySjRCTXV1eFhoaThwSTZhQVJmbklUc3lpaXZIRTdKNm5SYlVfcG5pYU1ObS1jWUFLN3U5VVJRMWt1Z1pTWEo%253Du0026hl=ru",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=qrO4YZeyl0I"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://accounts.google.com/ServiceLogin?service=youtubeu0026uilel=3u0026passive=trueu0026continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Dru%26next%3D%252F%2540LadyGaga%26continue_action%3DQUFFLUhqbHJiazdkUHFQS3ZEaGUzTkpld2VVV29IcTVxZ3xBQ3Jtc0tuNU83SmF0VFVJTEJwWVRrc3owNk5aNWtuMmo5cWFqekM2YUJvMXl1T0JxOG92MlJaaktMOUt5aVZncXVXTy1zNmNCaFBwVWVHVDBhT2oyeVJ2alA5clZrNHJwc3NhZU5iZEhxYkNDcTZIeGt0N21lcWtrLUNBeFJrTHhzRmFZMUZ5bFAtdElLNXJ1bEZIV2NHSkxsZjNrUlBJeXJmYUVldXd0SlVBTEVvZU01ZVU2X1JLcGpGUnd6WXQ3bm53R25FQ3hpQVou0026hl=ruu0026ec=66429",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/channel/UCNL1ZadSjHpjm4q9j2sVtOA"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://accounts.google.com/ServiceLogin?service=youtubeu0026uilel=3u0026passive=trueu0026continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Dru%26next%3D%252Fwatch%253Fv%253Db40ZmyQ-8OE%26continue_action%3DQUFFLUhqbkJtYTBMdFZCSUR6XzE1ajkzUlhZU2F3VkNUd3xBQ3Jtc0trQlRZY3VjcEhoUXBYOFZZQjhpZlkzUGkwWmRodW9YNlZZWVFkazNfVXVZWjdxdVpVYVpxV1JFMGQzNWhibktxUG9QVmkzQUgtNlBldmVyLV9tS0JtY01Eamp3b1pOSEowUFFQQkxyVFNNSFN5RkdIeTB5VEFvMDNfeXZMYXB5U21ENkhxalA3NnhncS1WSjVFcHdWM1Y3WVRmLUN1WG5XVVoxcTA2VWJKU0lJMURtOEJaLWlhZ0dnZ25FcjUzTGpRRmtOaHgu0026hl=ruu0026ec=66429",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=b40ZmyQ-8OE"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://accounts.google.com/ServiceLogin?service=youtubeu0026uilel=3u0026passive=trueu0026continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Dru%26next%3D%252Fwatch%253Fv%253DqrO4YZeyl0I%26continue_action%3DQUFFLUhqa2RIaWVTYU1QWkQyU2tKTV9vQ2FKLTlhY1d5UXxBQ3Jtc0trbmJwaG11OUhsMS1neHpfSGo4NG9NdnNoZlJKQUJWVW5Kd1RPd2hUZzN5bmd4MlhFTnRHa1l5R0thQTlmSUZib2lOcTJGemU4YUFsQnhSNzhidXNoT09KR0RTOEk2d21jajV3SnV3ZTF5alo4UFFWSmVNaFhqOEU1a2V0dzFMZF8tTE50aTlYWlZFb2dUVHVSQk9DaFVqOU9ISTRyQUM5QXNLZUIyTHdFTlBFa3RHTWIwWWROVUhjeXpyQ09wa3VzYW5lNEMu0026hl=ruu0026ec=66429",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=qrO4YZeyl0I"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://bosslike.ru/?ref=400196",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://iklife.ru/socialnye-seti/instagram/chto-takoe-instagram-i-zachem-on-nuzhen"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "лайк"
+    ],
+    "matched_service_terms": [
+      "сервис",
+      "накрут"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1016%2Fj.bushor.2018.02.002",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1016/j.bushor.2018.02.002",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1080%2F10641734.2017.1372321",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1080%2F19368623.2018.1382415",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1080/10641734.2017.1372321",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://dx.doi.org/10.1080/19368623.2018.1382415",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://iklife.ru/socialnye-seti/instagram/kak-nakrutit-podpischikov-v-inste",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://iklife.ru/socialnye-seti/instagram/chto-takoe-instagram-i-zachem-on-nuzhen"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "pod"
+    ],
+    "matched_service_terms": [
+      "накрут"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://rr12---sn-n8v7znlk.googlevideo.com/videoplayback?expire=1782153503u0026ei=vyw5arKuJbSj0u8P8_at-Acu0026ip=91.245.45.199u0026id=o-AALkOt8R0tWUiVoXy7hn3xCxMYwfV0Rcg0_j_SybO1Equ0026source=youtubeu0026requiressl=yesu0026xpc=EgVo2aDSNQ%3D%3Du0026cps=630u0026met=1782131903%2Cu0026mh=bAu0026mm=31%2C26u0026mn=sn-n8v7znlk%2Csn-5go7yneru0026ms=au%2Conru0026mv=mu0026mvi=12u0026pl=24u0026rms=au%2Cauu0026initcwndbps=3662500u0026spc=SQ-ummE1Rnmp3k3Qgied_3324WHomLlvxRa7oC4ikPSCnQyi3bjN0-sTScallJTBhGK6igu0026svpuc=1u0026ns=CAwmA62jv5HcOwjnKXfMna0Wu0026sabr=1u0026rqh=1u0026mt=1782131362u0026fvip=5u0026keepalive=yesu0026fexp=51565115%2C51565681%2C51987687u0026c=WEBu0026n=PbYXgENwoN-I2a9u0026sparams=expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Cspc%2Csvpuc%2Cns%2Csabr%2Crqhu0026sig=AHEqNM4wRQIhAP6WsFLnGDcggrH-NHGxwZxMxeukvJEsdxm18BzzvFlxAiAox6EEsfXf5tr7hSLDX8zP-DJDQooDU24V7q68ZxOUDQ%3D%3Du0026lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbpsu0026lsig=APaTxxMwRAIgMCbFvV9LRkhZihBWBXSS52nG1CpVuZyjl7hT4JSeJU0CID3FErSEBjSBAQ5tyvfJNOurBa5z-GJHGrNMjUccgykr",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=b40ZmyQ-8OE"
+    ],
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "vip"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://rr9---sn-n8v7kn7l.googlevideo.com/videoplayback%3Fexpire%3D1782153471%26ei%3Dnyw5au38L6eD0u8P76ffwA4%26ip%3D91.245.45.199%26id%3Do-AHB2xuZmcqqKfGa82DfXTJWX9s15SIV79ElWHQMdj8TV%26itag%3D18%26source%3Dyoutube%26requiressl%3Dyes%26xpc%3DEgVo2aDSNQ%253D%253D%26cps%3D818%26met%3D1782131871%252C%26mh%3DQO%26mm%3D31%252C29%26mn%3Dsn-n8v7kn7l%252Csn-n8v7znsz%26ms%3Dau%252Crdu%26mv%3Dm%26mvi%3D9%26pl%3D24%26rms%3Dau%252Cau%26gcr%3Dru%26initcwndbps%3D3662500%26bui%3DARmQxEVUpY4X9mwQdrvECImHaYd_dk1S65e8F4bhzF3VdSzJCY1s0U-XzO_lRWy-HjXtK7zY2pqI5de_%26spc%3DSQ-umtBmaT2nxj7sFMbOSeBXlHDDNDFdRCTNvcbgfTcPxbBpD946TQK1n2vDXCbE_WhAuBeP%26vprv%3D1%26svpuc%3D1%26xtags%3Dheaudio%253Dtrue%26mime%3Dvideo%252Fmp4%26ns%3DaYSbhump3aFpTsJRx7KH7VsW%26rqh%3D1%26cnr%3D14%26ratebypass%3Dyes%26dur%3D308.500%26lmt%3D1714860514989019%26mt%3D1782131362%26fvip%3D6%26fexp%3D51565115%252C51565681%252C51987687%26c%3DWEB%26sefc%3D1%26txp%3D4538434%26n%3DYu6t6JJ2HwkGvwZ%26sparams%3Dexpire%252Cei%252Cip%252Cid%252Citag%252Csource%252Crequiressl%252Cxpc%252Cgcr%252Cbui%252Cspc%252Cvprv%252Csvpuc%252Cxtags%252Cmime%252Cns%252Crqh%252Ccnr%252Cratebypass%252Cdur%252Clmt%26lsparams%3Dcps%252Cmet%252Cmh%252Cmm%252Cmn%252Cms%252Cmv%252Cmvi%252Cpl%252Crms%252Cinitcwndbps%26lsig%3DAPaTxxMwRgIhAPWzYx__WsgetWPzPnmC6vLp9y6Jj3mgGnbmB88wsdQ4AiEAopNLUUZMh-Ek0fOF_UkXW0mL279EXd0mfjvpPKqb2ws%253D",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=qrO4YZeyl0I"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "vip"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://rr9---sn-n8v7kn7l.googlevideo.com/videoplayback?expire=1782153471u0026ei=nyw5au38L6eD0u8P76ffwA4u0026ip=91.245.45.199u0026id=o-AHB2xuZmcqqKfGa82DfXTJWX9s15SIV79ElWHQMdj8TVu0026source=youtubeu0026requiressl=yesu0026xpc=EgVo2aDSNQ%3D%3Du0026cps=818u0026met=1782131871%2Cu0026mh=QOu0026mm=31%2C29u0026mn=sn-n8v7kn7l%2Csn-n8v7znszu0026ms=au%2Crduu0026mv=mu0026mvi=9u0026pl=24u0026rms=au%2Cauu0026gcr=ruu0026initcwndbps=3662500u0026spc=SQ-umtBlaT2nxj7sFMbOSeBXlHDCNDFdRCTNvcbgfTcPxbBpD946TQK1n2vDXCb0-IBAIAu0026svpuc=1u0026ns=JE9r36oDVr2PRWab3jX3IdQWu0026sabr=1u0026rqh=1u0026mt=1782131362u0026fvip=6u0026keepalive=yesu0026fexp=51565115%2C51565681%2C51987687u0026c=WEBu0026n=hT7hcJyOdg8WcTZu0026sparams=expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cspc%2Csvpuc%2Cns%2Csabr%2Crqhu0026sig=AHEqNM4wRgIhALZ4PVCkY9uxOxCk2zR7Tboob9B9v61QYaSTZmW1nj-GAiEAkuU4pUfIg14d-0vbZLdUtrbTiHdiz1K_bKg08FCDDt0%3Du0026lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbpsu0026lsig=APaTxxMwRgIhAPWzYx__WsgetWPzPnmC6vLp9y6Jj3mgGnbmB88wsdQ4AiEAopNLUUZMh-Ek0fOF_UkXW0mL279EXd0mfjvpPKqb2ws%3D",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.youtube.com/watch?v=qrO4YZeyl0I"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta",
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_service_terms": [
+      "vip"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://ru.wikipedia.org/wiki/Нравится",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "лайк"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://tjournal.ru/internet/120072-instagram-udalit-vkladku-podpiski-kotoraya-pozvolyala-sledit-za-deystviyami-drugih-polzovateley",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "pod"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://translate.google.ca/saved",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://translate.google.ca/"
+    ],
+    "matched_instagram_terms": [
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "сохран"
+    ],
+    "matched_service_terms": [
+      "service"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://web.archive.org/web/20210307054637/https://tjournal.ru/internet/120072-instagram-udalit-vkladku-podpiski-kotoraya-pozvolyala-sledit-za-deystviyami-drugih-polzovateley",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "pod"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://web.archive.org/web/20230331032939/https://www.vedomosti.ru/sport/football/articles/2022/11/21/951411-krishtianu-ronaldu-stal-pervim-chelovekom-s-500-mln-podpischikov-v-populyarnoi-sotsseti",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.wikipedia.org/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "pod"
+    ],
+    "matched_service_terms": [
+      "сервис"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://www.buysellshoutouts.com/instagram-engagement-pods-free-list-of-groups/",
+    "platform": "web",
+    "kind": "service_or_article",
+    "source_count": 1,
+    "source_pages": [
+      "https://www.buysellshoutouts.com/instagram-engagement-pods-free-list-of-groups/"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "engagement",
+      "pod"
+    ],
+    "matched_service_terms": [
+      "buy"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  }
+]

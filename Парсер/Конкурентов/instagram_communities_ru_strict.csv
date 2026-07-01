@@ -1,0 +1,26 @@
+﻿username,url,title,description,participants,matched_instagram_terms,matched_mutual_terms,matched_non_instagram_terms,matched_spam_market_terms,is_mutual_activity,is_instagram_only,is_clean_competitor_candidate,is_match,source_pages
+apocmarket,https://t.me/apocmarket,apocmarket,Parsed from source pages (Telegram preview unavailable).,,,,,market,False,False,False,False,https://t.me/apocmarket
+beaversmarketplace,https://t.me/beaversmarketplace,beaversmarketplace,Parsed from source pages (Telegram preview unavailable).,,,,,market,False,False,False,False,https://t.me/beaversmarketplace
+boostuppowerlikes,https://t.me/boostuppowerlikes,boostuppowerlikes,Parsed from source pages (Telegram preview unavailable).,,,likes,,boost,False,False,False,False,https://t.me/boostuppowerlikes
+elite_chat,https://t.me/elite_chat,elite_chat,Parsed from source pages (Telegram preview unavailable).,,,,,,False,False,True,False,https://t.me/elite_chat
+elitemarket,https://t.me/elitemarket,elitemarket,Parsed from source pages (Telegram preview unavailable).,,,,,market,False,False,False,False,https://t.me/elitemarket
+engagementgroups,https://t.me/engagementgroups,engagementgroups,Parsed from source pages (Telegram preview unavailable).,,,engagement,,,False,False,True,False,https://t.me/engagementgroups
+engagementgroupsforinstagram,https://t.me/engagementgroupsforinstagram,engagementgroupsforinstagram,Parsed from source pages (Telegram preview unavailable).,,"instagram, insta",engagement,,,False,True,True,False,https://t.me/engagementgroupsforinstagram
+engagementgroupsIG,https://t.me/engagementgroupsIG,engagementgroupsIG,Parsed from source pages (Telegram preview unavailable).,,ig,engagement,,,False,True,True,False,https://t.me/engagementgroupsIG
+igbst,https://t.me/igbst,igbst,Parsed from source pages (Telegram preview unavailable).,,ig,,,,False,True,True,False,https://t.me/igbst
+iggainzgrowthlist,https://t.me/iggainzgrowthlist,iggainzgrowthlist,Parsed from source pages (Telegram preview unavailable).,,ig,,,,False,True,True,False,https://t.me/iggainzgrowthlist
+igmasslikes,https://t.me/igmasslikes,igmasslikes,Parsed from source pages (Telegram preview unavailable).,,ig,likes,,,False,True,True,False,https://t.me/igmasslikes
+instaempiremarket,https://t.me/instaempiremarket,instaempiremarket,Parsed from source pages (Telegram preview unavailable).,,insta,,,market,False,True,False,False,https://t.me/instaempiremarket
+instagains100k,https://t.me/instagains100k,instagains100k,Parsed from source pages (Telegram preview unavailable).,,insta,,,,False,True,True,False,https://t.me/instagains100k
+instagains20k,https://t.me/instagains20k,instagains20k,Parsed from source pages (Telegram preview unavailable).,,insta,,,,False,True,True,False,https://t.me/instagains20k
+instagains50k,https://t.me/instagains50k,instagains50k,Parsed from source pages (Telegram preview unavailable).,,insta,,,,False,True,True,False,https://t.me/instagains50k
+instagramventuresmarket,https://t.me/instagramventuresmarket,instagramventuresmarket,Parsed from source pages (Telegram preview unavailable).,,"instagram, insta",,,market,False,True,False,False,https://t.me/instagramventuresmarket
+lorule,https://t.me/lorule,lorule,Parsed from source pages (Telegram preview unavailable).,,,"взаим, лайк, коммент",,"smm, подписчик, услуг, купить",False,False,False,False,https://dtf.ru/pro-smm/4762864-vzaimnyj-piar-telegram-kanalov
+MoneyMartOG,https://t.me/MoneyMartOG,MoneyMartOG,Parsed from source pages (Telegram preview unavailable).,,,,,,False,False,True,False,https://t.me/MoneyMartOG
+NsmIGGroup,https://t.me/NsmIGGroup,NsmIGGroup,Parsed from source pages (Telegram preview unavailable).,,ig,,,,False,True,True,False,https://t.me/NsmIGGroup
+PUSHGROUPDX5,https://t.me/PUSHGROUPDX5,PUSHGROUPDX5,Parsed from source pages (Telegram preview unavailable).,,,dx,,,False,False,True,False,https://t.me/PUSHGROUPDX5
+sendpulsee,https://t.me/sendpulsee,sendpulsee,Parsed from source pages (Telegram preview unavailable).,,"instagram, инстаграм, инста, insta",взаим,"tiktok, youtube, facebook","market, подписчик",False,False,False,False,https://sendpulse.com/ru/blog/mutual-pr-on-instagram
+successed,https://t.me/successed,successed,Parsed from source pages (Telegram preview unavailable).,,,,,,False,False,True,False,https://t.me/successed
+twcommunity,https://t.me/twcommunity,twcommunity,Parsed from source pages (Telegram preview unavailable).,,"instagram, insta","взаим, актив, лайк, коммент",,"premium, smm, накрут, подписчик, услуг",False,True,False,False,https://timeweb.com/ru/community/articles/nakrutka-kommentariev-v-instagram-luchshie-servisy-po-rabote-s-kommentariyami-v-instagram
+VGNCHAT,https://t.me/VGNCHAT,VGNCHAT,Parsed from source pages (Telegram preview unavailable).,,,,,,False,False,True,False,https://t.me/VGNCHAT
+VGNLIKES,https://t.me/VGNLIKES,VGNLIKES,Parsed from source pages (Telegram preview unavailable).,,,likes,,,False,False,True,False,https://t.me/VGNLIKES

@@ -1,0 +1,371 @@
+[
+  {
+    "url": "https://t.me/apkpurechannel",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 2,
+    "source_pages": [
+      "https://apkpure.net/ru/instagram-app/com.instagram.android",
+      "https://apkpure.net/ru/instagram-app/com.instagram.android/download"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://t.me/apphunter_ru",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 2,
+    "source_pages": [
+      "https://apkpure.net/ru/instagram-app/com.instagram.android",
+      "https://apkpure.net/ru/instagram-app/com.instagram.android/download"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://telegram.me/share/url",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 2,
+    "source_pages": [
+      "https://apkpure.net/ru/instagram-app/com.instagram.android",
+      "https://apkpure.net/ru/instagram-app/com.instagram.android/download"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "high"
+  },
+  {
+    "url": "https://discord.gg/openai",
+    "platform": "discord",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://openai.com/index/chatgpt/"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://discord.gg/openai\\",
+    "platform": "discord",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://openai.com/index/chatgpt/"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/chatgptchatapp",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://chatbotchatapp.com/ru"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/dnative/711",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.ruwiki.ru/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [
+      "smm"
+    ],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/dnative/711\\",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.ruwiki.ru/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/iMeLime\\u003cbr\\u003eНовости:",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://play.google.com/store/apps/details?id=com.instagram.android&hl=ru"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "engagement",
+      "pod",
+      "like for like",
+      "comment for comment",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/iMeMessenger\\u003cbr\\u003eОбсуждения:",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://play.google.com/store/apps/details?id=com.instagram.android&hl=ru"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "engagement",
+      "pod",
+      "like for like",
+      "comment for comment",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/iMe_ai\\u003cbr\\u003eГруппа",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://play.google.com/store/apps/details?id=com.instagram.android&hl=ru"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "engagement",
+      "pod",
+      "like for like",
+      "comment for comment",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/iklife",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://iklife.ru/socialnye-seti/instagram/chto-takoe-instagram-i-zachem-on-nuzhen"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/ime_ru",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://play.google.com/store/apps/details?id=com.instagram.android&hl=ru"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "engagement",
+      "pod",
+      "like for like",
+      "comment for comment",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/ruwikiofficial",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://ru.ruwiki.ru/wiki/Instagram"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "инстаграм",
+      "инста",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим",
+      "лайк"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  },
+  {
+    "url": "https://t.me/yandex360blog",
+    "platform": "telegram",
+    "kind": "community",
+    "source_count": 1,
+    "source_pages": [
+      "https://360.yandex.ru/telemost/"
+    ],
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "взаим"
+    ],
+    "matched_service_terms": [],
+    "is_instagram_related": true,
+    "is_mutual_related": true,
+    "is_relevant": true,
+    "confidence": "medium"
+  }
+]

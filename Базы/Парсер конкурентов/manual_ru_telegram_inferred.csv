@@ -1,0 +1,14 @@
+platform;kind;username;url;sources_count;matched_terms;is_mutual_related;source_pages;source_type;confidence
+telegram;community;aktivnosti_chat;https://t.me/aktivnosti_chat;1;взаим, актив, лайк, инстаграм;YES;websearch snippet;manual_inferred;high
+telegram;community;inst_activ_ru;https://t.me/inst_activ_ru;1;взаим, актив, инстаграм;YES;websearch snippet;manual_inferred;high
+telegram;community;instachat6;https://t.me/instachat6;1;актив, инстаграм;YES;websearch snippet;manual_inferred;high
+telegram;community;vzaimno_insta_gram;https://t.me/vzaimno_insta_gram;1;взаим, инста;YES;websearch snippet;manual_inferred;medium
+telegram;community;instals20;https://t.me/instals20;1;инста, лайк;YES;websearch snippet;manual_inferred;medium
+telegram;community;aktivnosty_chat;https://t.me/aktivnosty_chat;1;актив, инстаграм;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;actinstachat;https://t.me/actinstachat;1;актив, инста;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;Panda_5up;https://t.me/Panda_5up;1;инстаграм;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;Topnonstopp;https://t.me/Topnonstopp;1;инстаграм;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;Toptoptoptop11;https://t.me/Toptoptoptop11;1;инстаграм;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;chataktivnosti;https://t.me/chataktivnosti;1;чат, актив;YES;niksolovov article mention;manual_inferred;medium
+telegram;community;pravila_inst;https://t.me/pravila_inst;1;правила, инстаграм;YES;telegram-store description;manual_inferred;high
+telegram;community;aleks_storiesinsta;https://t.me/aleks_storiesinsta;1;инста, актив;YES;telegram-store related;manual_inferred;low

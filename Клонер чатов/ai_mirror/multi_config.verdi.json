@@ -1,0 +1,61 @@
+{
+  "use_ai": false,
+  "ignore_bots": true,
+  "ignore_service_messages": true,
+  "routes": [
+    {
+      "name": "задания_7",
+      "type": "task",
+      "session_name": "listener_main",
+      "source_chat_id": -1001121968503,
+      "mirror_chat_id": -1003795990136,
+      "mirror_username": "multiverdichat4",
+      "mirror_public_link": "https://t.me/multiverdichat4"
+    },
+    {
+      "name": "задания_10",
+      "type": "task",
+      "session_name": "listener_main",
+      "source_chat_id": -1001160095982,
+      "mirror_chat_id": -1003940517851,
+      "mirror_username": "multiverdichat5",
+      "mirror_public_link": "https://t.me/multiverdichat5"
+    },
+    {
+      "name": "задания_13",
+      "type": "task",
+      "session_name": "listener_main",
+      "source_chat_id": -1001351711376,
+      "mirror_chat_id": -1003705775167,
+      "mirror_username": "multiverdichat6",
+      "mirror_public_link": "https://t.me/multiverdichat6"
+    },
+    {
+      "name": "отчеты_7",
+      "type": "report",
+      "session_name": "listener_main",
+      "source_chat_id": -1001308213116,
+      "mirror_chat_id": -1004449662477,
+      "mirror_username": "multiverdichat1",
+      "mirror_public_link": "https://t.me/multiverdichat1"
+    },
+    {
+      "name": "отчеты_10",
+      "type": "report",
+      "session_name": "listener_main",
+      "source_chat_id": -1001466065357,
+      "mirror_chat_id": -1003778168071,
+      "mirror_username": "multiverdichat2",
+      "mirror_public_link": "https://t.me/multiverdichat2"
+    },
+    {
+      "name": "отчеты_13",
+      "type": "report",
+      "session_name": "listener_main",
+      "source_chat_id": -1001150352978,
+      "mirror_chat_id": -1003974758062,
+      "mirror_username": "multiverdichat3",
+      "mirror_public_link": "https://t.me/multiverdichat3"
+    }
+  ]
+}

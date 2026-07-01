@@ -1,0 +1,179 @@
+{
+  "source": "multi12000",
+  "clones": [
+    {
+      "index": 1,
+      "mirror_chat_id": -1004449662477,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 1 отчёты",
+      "username": "multiverdichat1",
+      "public_link": "https://t.me/multiverdichat1",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:24:28",
+      "role": "отчёты",
+      "pool": "verdi_7",
+      "source_chat_id": -1001308213116,
+      "source_title": "VERDI 7 «отчеты»"
+    },
+    {
+      "index": 2,
+      "mirror_chat_id": -1003778168071,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 2 отчёты",
+      "username": "multiverdichat2",
+      "public_link": "https://t.me/multiverdichat2",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:25:17",
+      "role": "отчёты",
+      "pool": "verdi_10",
+      "source_chat_id": -1001466065357,
+      "source_title": "VERDI 10 «отчеты»"
+    },
+    {
+      "index": 3,
+      "mirror_chat_id": -1003974758062,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 3 отчёты",
+      "username": "multiverdichat3",
+      "public_link": "https://t.me/multiverdichat3",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:26:07",
+      "role": "отчёты",
+      "pool": "verdi_13",
+      "source_chat_id": -1001150352978,
+      "source_title": "VERDI 13 «отчеты»"
+    },
+    {
+      "index": 4,
+      "mirror_chat_id": -1003795990136,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 4 задание",
+      "username": "multiverdichat4",
+      "public_link": "https://t.me/multiverdichat4",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:26:56",
+      "role": "задание",
+      "pool": "verdi_7",
+      "source_chat_id": -1001121968503,
+      "source_title": "VERDI 7 «задания»"
+    },
+    {
+      "index": 5,
+      "mirror_chat_id": -1003940517851,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 5 задание",
+      "username": "multiverdichat5",
+      "public_link": "https://t.me/multiverdichat5",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:27:46",
+      "role": "задание",
+      "pool": "verdi_10",
+      "source_chat_id": -1001160095982,
+      "source_title": "VERDI 10 «задания»"
+    },
+    {
+      "index": 6,
+      "mirror_chat_id": -1003705775167,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 6 задание",
+      "username": "multiverdichat6",
+      "public_link": "https://t.me/multiverdichat6",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:39:31",
+      "role": "задание",
+      "pool": "verdi_13",
+      "source_chat_id": -1001351711376,
+      "source_title": "VERDI 13 «задания»"
+    },
+    {
+      "index": 7,
+      "mirror_chat_id": -1004447461745,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 7",
+      "username": "multiverdichat7",
+      "public_link": "https://t.me/multiverdichat7",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T13:40:21"
+    },
+    {
+      "index": 8,
+      "mirror_chat_id": -1004377761506,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 8",
+      "username": "multiverdichat8",
+      "public_link": "https://t.me/multiverdichat8",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T14:24:30"
+    },
+    {
+      "index": 9,
+      "mirror_chat_id": -1003939737572,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 9",
+      "username": "multiverdichat9",
+      "public_link": "https://t.me/multiverdichat9",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T14:24:41"
+    },
+    {
+      "index": 10,
+      "mirror_chat_id": -1004496474813,
+      "mirror_title": "VERDI COMMUNITY | Взаимная активность Инстаграм 10",
+      "username": "multiverdichat10",
+      "public_link": "https://t.me/multiverdichat10",
+      "rules_msg_id": 3,
+      "created_at": "2026-07-01T14:25:31"
+    }
+  ],
+  "target_count": 10,
+  "deleted_at": "2026-07-01T12:59:09",
+  "plain_chats": true,
+  "pools": {
+    "verdi_7": {
+      "routes": [
+        {
+          "source_chat_id": -1001308213116,
+          "source_title": "VERDI 7 «отчеты»",
+          "mirror_index": 1,
+          "mirror_username": "multiverdichat1",
+          "mirror_public_link": "https://t.me/multiverdichat1"
+        },
+        {
+          "source_chat_id": -1001121968503,
+          "source_title": "VERDI 7 «задания»",
+          "mirror_index": 4,
+          "mirror_username": "multiverdichat4",
+          "mirror_public_link": "https://t.me/multiverdichat4"
+        }
+      ]
+    },
+    "verdi_10": {
+      "routes": [
+        {
+          "source_chat_id": -1001466065357,
+          "source_title": "VERDI 10 «отчеты»",
+          "mirror_index": 2,
+          "mirror_username": "multiverdichat2",
+          "mirror_public_link": "https://t.me/multiverdichat2"
+        },
+        {
+          "source_chat_id": -1001160095982,
+          "source_title": "VERDI 10 «задания»",
+          "mirror_index": 5,
+          "mirror_username": "multiverdichat5",
+          "mirror_public_link": "https://t.me/multiverdichat5"
+        }
+      ]
+    },
+    "verdi_13": {
+      "routes": [
+        {
+          "source_chat_id": -1001150352978,
+          "source_title": "VERDI 13 «отчеты»",
+          "mirror_index": 3,
+          "mirror_username": "multiverdichat3",
+          "mirror_public_link": "https://t.me/multiverdichat3"
+        },
+        {
+          "source_chat_id": -1001351711376,
+          "source_title": "VERDI 13 «задания»",
+          "mirror_index": 6,
+          "mirror_username": "multiverdichat6",
+          "mirror_public_link": "https://t.me/multiverdichat6"
+        }
+      ]
+    }
+  },
+  "updated_at": "2026-07-01T16:00:00"
+}

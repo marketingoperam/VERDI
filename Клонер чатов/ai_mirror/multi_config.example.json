@@ -1,0 +1,67 @@
+{
+  "use_ai": false,
+  "ignore_bots": true,
+  "ignore_service_messages": true,
+  "routes": [
+    {
+      "name": "задание_1",
+      "type": "task",
+      "session_name": "tech_79534929552",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0,
+      "source_topic_id": null,
+      "mirror_topic_id": null
+    },
+    {
+      "name": "задание_2",
+      "type": "task",
+      "session_name": "tech_79534929552",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    },
+    {
+      "name": "задание_3",
+      "type": "task",
+      "session_name": "tech_79534929552",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    },
+    {
+      "name": "отчёт_1",
+      "type": "report",
+      "session_name": "tech_13309563469",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    },
+    {
+      "name": "отчёт_2",
+      "type": "report",
+      "session_name": "tech_13309563469",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    },
+    {
+      "name": "отчёт_3",
+      "type": "report",
+      "session_name": "tech_13309563469",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    },
+    {
+      "name": "модератор",
+      "type": "moderator",
+      "session_name": "tech_79534929552",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0,
+      "allowed_sender_ids": [0],
+      "comment": "Копировать только сообщения модератора (укажите его user id)"
+    },
+    {
+      "name": "общая_информация",
+      "type": "info",
+      "session_name": "tech_13309563469",
+      "source_chat_id": 0,
+      "mirror_chat_id": 0
+    }
+  ]
+}

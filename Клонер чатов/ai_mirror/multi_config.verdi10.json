@@ -1,0 +1,43 @@
+{
+  "pool": "verdi_10",
+  "use_ai": false,
+  "ignore_bots": true,
+  "ignore_service_messages": true,
+  "sync_profile": true,
+  "sync_name": true,
+  "sync_avatar": true,
+  "tech_sessions": [
+    "tech_1",
+    "tech_2",
+    "tech_3",
+    "tech_4",
+    "tech_5",
+    "tech_6",
+    "tech_7",
+    "tech_8",
+    "tech_9",
+    "tech_10"
+  ],
+  "routes": [
+    {
+      "name": "verdi10_отчеты",
+      "type": "report",
+      "session_name": "listener_main",
+      "source_chat_id": -1001466065357,
+      "source_title": "VERDI 10 «отчеты»",
+      "mirror_chat_id": -1003778168071,
+      "mirror_username": "multiverdichat2",
+      "mirror_public_link": "https://t.me/multiverdichat2"
+    },
+    {
+      "name": "verdi10_задания",
+      "type": "task",
+      "session_name": "listener_main",
+      "source_chat_id": -1001160095982,
+      "source_title": "VERDI 10 «задания»",
+      "mirror_chat_id": -1003940517851,
+      "mirror_username": "multiverdichat5",
+      "mirror_public_link": "https://t.me/multiverdichat5"
+    }
+  ]
+}

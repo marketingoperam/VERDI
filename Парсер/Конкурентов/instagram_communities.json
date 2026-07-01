@@ -1,0 +1,392 @@
+[
+  {
+    "username": "engagementgroupsforinstagram",
+    "url": "https://t.me/engagementgroupsforinstagram",
+    "title": "engagementgroupsforinstagram",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [
+      "engagement"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": true,
+    "is_match": true,
+    "source_pages": [
+      "https://t.me/engagementgroupsforinstagram"
+    ]
+  },
+  {
+    "username": "engagementgroupsIG",
+    "url": "https://t.me/engagementgroupsIG",
+    "title": "engagementgroupsIG",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "engagement"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": true,
+    "is_match": true,
+    "source_pages": [
+      "https://t.me/engagementgroupsIG"
+    ]
+  },
+  {
+    "username": "igmasslikes",
+    "url": "https://t.me/igmasslikes",
+    "title": "igmasslikes",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [
+      "likes"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": true,
+    "is_match": true,
+    "source_pages": [
+      "https://t.me/igmasslikes"
+    ]
+  },
+  {
+    "username": "NsmIGGroup",
+    "url": "https://t.me/NsmIGGroup",
+    "title": "NsmIGGroup",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": true,
+    "is_match": true,
+    "source_pages": [
+      "https://t.me/NsmIGGroup"
+    ]
+  },
+  {
+    "username": "apocmarket",
+    "url": "https://t.me/apocmarket",
+    "title": "apocmarket",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/apocmarket"
+    ]
+  },
+  {
+    "username": "beaversmarketplace",
+    "url": "https://t.me/beaversmarketplace",
+    "title": "beaversmarketplace",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/beaversmarketplace"
+    ]
+  },
+  {
+    "username": "boostuppowerlikes",
+    "url": "https://t.me/boostuppowerlikes",
+    "title": "boostuppowerlikes",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [
+      "likes"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/boostuppowerlikes"
+    ]
+  },
+  {
+    "username": "elite_chat",
+    "url": "https://t.me/elite_chat",
+    "title": "elite_chat",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/elite_chat"
+    ]
+  },
+  {
+    "username": "elitemarket",
+    "url": "https://t.me/elitemarket",
+    "title": "elitemarket",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/elitemarket"
+    ]
+  },
+  {
+    "username": "engagementgroups",
+    "url": "https://t.me/engagementgroups",
+    "title": "engagementgroups",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [
+      "engagement"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/engagementgroups"
+    ]
+  },
+  {
+    "username": "igbst",
+    "url": "https://t.me/igbst",
+    "title": "igbst",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/igbst"
+    ]
+  },
+  {
+    "username": "iggainzgrowthlist",
+    "url": "https://t.me/iggainzgrowthlist",
+    "title": "iggainzgrowthlist",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "ig"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/iggainzgrowthlist"
+    ]
+  },
+  {
+    "username": "instaempiremarket",
+    "url": "https://t.me/instaempiremarket",
+    "title": "instaempiremarket",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "insta"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/instaempiremarket"
+    ]
+  },
+  {
+    "username": "instagains100k",
+    "url": "https://t.me/instagains100k",
+    "title": "instagains100k",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "insta"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/instagains100k"
+    ]
+  },
+  {
+    "username": "instagains20k",
+    "url": "https://t.me/instagains20k",
+    "title": "instagains20k",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "insta"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/instagains20k"
+    ]
+  },
+  {
+    "username": "instagains50k",
+    "url": "https://t.me/instagains50k",
+    "title": "instagains50k",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "insta"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/instagains50k"
+    ]
+  },
+  {
+    "username": "instagramventuresmarket",
+    "url": "https://t.me/instagramventuresmarket",
+    "title": "instagramventuresmarket",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [
+      "instagram",
+      "insta"
+    ],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": true,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/instagramventuresmarket"
+    ]
+  },
+  {
+    "username": "MoneyMartOG",
+    "url": "https://t.me/MoneyMartOG",
+    "title": "MoneyMartOG",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/MoneyMartOG"
+    ]
+  },
+  {
+    "username": "PUSHGROUPDX5",
+    "url": "https://t.me/PUSHGROUPDX5",
+    "title": "PUSHGROUPDX5",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [
+      "dx"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/PUSHGROUPDX5"
+    ]
+  },
+  {
+    "username": "successed",
+    "url": "https://t.me/successed",
+    "title": "successed",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/successed"
+    ]
+  },
+  {
+    "username": "VGNCHAT",
+    "url": "https://t.me/VGNCHAT",
+    "title": "VGNCHAT",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": false,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/VGNCHAT"
+    ]
+  },
+  {
+    "username": "VGNLIKES",
+    "url": "https://t.me/VGNLIKES",
+    "title": "VGNLIKES",
+    "description": "Parsed from source pages (Telegram preview unavailable).",
+    "participants": "",
+    "matched_instagram_terms": [],
+    "matched_mutual_terms": [
+      "likes"
+    ],
+    "matched_non_instagram_terms": [],
+    "is_mutual_activity": true,
+    "is_instagram_only": false,
+    "is_match": false,
+    "source_pages": [
+      "https://t.me/VGNLIKES"
+    ]
+  }
+]
