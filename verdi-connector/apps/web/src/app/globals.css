@@ -110,19 +110,36 @@ button.secondary { background: #2a3142; }
   .inbox {
     grid-template-columns: 1fr;
     height: 100dvh;
+    overflow: hidden;
   }
-  .inbox.show-chat .sidebar {
-    display: none;
+  /* Phone: list first; chat only after tap */
+  .inbox.show-list .sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
   }
   .inbox.show-list .chat,
   .inbox.show-list .lead-card {
-    display: none;
+    display: none !important;
+  }
+  .inbox.show-chat .sidebar {
+    display: none !important;
+  }
+  .inbox.show-chat .chat {
+    display: grid;
+    height: 100dvh;
+  }
+  .inbox.show-chat .lead-card {
+    display: none !important;
   }
   .sidebar {
     border-right: none;
   }
   .list {
-    height: calc(100dvh - 160px);
+    flex: 1;
+    height: auto;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .chat header {
     position: sticky;
@@ -132,8 +149,16 @@ button.secondary { background: #2a3142; }
     grid-template-columns: auto 1fr auto;
     align-items: center;
   }
+  .chat header h3 {
+    margin: 0;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .messages {
     padding: 12px;
+    min-height: 0;
   }
   .msg {
     max-width: 92%;
@@ -142,7 +167,7 @@ button.secondary { background: #2a3142; }
     flex-direction: column;
   }
   .mobile-back {
-    display: inline-flex;
+    display: inline-flex !important;
   }
 }
 

@@ -124,7 +124,12 @@ async def handle_sync(client: TelegramClient, session_name: str, me_id: int, req
     count = 0
     async for dialog in client.iter_dialogs(limit=limit_dialogs):
         entity = dialog.entity
-        if not isinstance(entity, User) or entity.bot:
+        # Only real clients: skip bots, Saved Messages (self), and official Telegram service user.
+        if not isinstance(entity, User) or entity.bot or getattr(entity, "is_self", False):
+            continue
+        if int(entity.id) in {777000, 42777} or (entity.username or "").lower() == "telegram":
+            continue
+        if int(entity.id) == int(me_id):
             continue
         messages = await client.get_messages(entity, limit=limit_messages)
         payload_messages = []
@@ -224,7 +229,11 @@ async def main_async(args: argparse.Namespace) -> None:
         if not event.is_private:
             return
         sender = await event.get_sender()
-        if not isinstance(sender, User) or sender.bot:
+        if not isinstance(sender, User) or sender.bot or getattr(sender, "is_self", False):
+            return
+        if int(sender.id) in {777000, 42777, me_id}:
+            return
+        if (sender.username or "").lower() == "telegram":
             return
         text = event.raw_text or ""
         if not text.strip():

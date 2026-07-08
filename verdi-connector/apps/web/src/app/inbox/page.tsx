@@ -28,11 +28,18 @@ type Message = {
 
 type Template = { id: string; title: string; body: string };
 
+function leadLabel(c: Conversation): string {
+  if (c.lead.username) return `@${c.lead.username}`;
+  if (c.lead.firstName) return c.lead.firstName;
+  return c.lead.telegramUserId;
+}
+
 export default function InboxPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
@@ -91,7 +98,8 @@ export default function InboxPage() {
     try {
       const rows = await api<Conversation[]>(`/conversations?${params}`, authToken);
       setConversations(rows);
-      if (!selectedId && rows[0]) setSelectedId(rows[0].id);
+      // Keep selection if still present; never auto-open chat on mobile list view.
+      setSelectedId((prev) => (prev && rows.some((r) => r.id === prev) ? prev : null));
       setStatus('');
     } catch (err) {
       setStatus((err as Error).message);
@@ -101,9 +109,14 @@ export default function InboxPage() {
   async function openConversation(id: string) {
     if (!token) return;
     setSelectedId(id);
+    setMobileView('chat');
     const detail = await api<Conversation>(`/conversations/${id}`, token);
     setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, ...detail } : c)));
     await api(`/conversations/${id}/read`, token, { method: 'PATCH' });
+  }
+
+  function backToList() {
+    setMobileView('list');
   }
 
   async function sendReply() {
@@ -137,8 +150,10 @@ export default function InboxPage() {
 
   if (!token) return null;
 
+  const inboxClass = `inbox ${mobileView === 'chat' && selectedId ? 'show-chat' : 'show-list'}`;
+
   return (
-    <div className={`inbox ${selectedId ? 'show-chat' : 'show-list'}`}>
+    <div className={inboxClass}>
       <aside className="sidebar">
         <header>
           <h2>Диалоги</h2>
@@ -159,17 +174,21 @@ export default function InboxPage() {
           </select>
         </header>
         <div className="list">
-          {conversations.map((c) => (
-            <button
-              key={c.id}
-              className={`item ${selectedId === c.id ? 'active' : ''}`}
-              onClick={() => void openConversation(c.id)}
-            >
-              <strong>{c.lead.username ? `@${c.lead.username}` : c.lead.firstName ?? c.lead.telegramUserId}</strong>
-              <span>{c.state} · unread {c.unreadCount}</span>
-              {c.isStopListed && <em>stop-list</em>}
-            </button>
-          ))}
+          {conversations.length === 0 ? (
+            <div className="empty">Нет клиентских диалогов</div>
+          ) : (
+            conversations.map((c) => (
+              <button
+                key={c.id}
+                className={`item ${selectedId === c.id ? 'active' : ''}`}
+                onClick={() => void openConversation(c.id)}
+              >
+                <strong>{leadLabel(c)}</strong>
+                <span>{c.state} · unread {c.unreadCount}</span>
+                {c.isStopListed && <em>stop-list</em>}
+              </button>
+            ))
+          )}
         </div>
       </aside>
 
@@ -177,10 +196,10 @@ export default function InboxPage() {
         {selected ? (
           <>
             <header>
-              <button type="button" className="mobile-back" onClick={() => setSelectedId(null)}>
+              <button type="button" className="mobile-back" onClick={backToList}>
                 ← Назад
               </button>
-              <h3>{selected.lead.firstName ?? selected.lead.username ?? selected.lead.telegramUserId}</h3>
+              <h3>{leadLabel(selected)}</h3>
               <span>{status}</span>
             </header>
             <div className="messages">
@@ -218,7 +237,7 @@ export default function InboxPage() {
           <>
             <h3>Карточка лида</h3>
             <p>Telegram ID: {selected.lead.telegramUserId}</p>
-            <p>Username: {selected.lead.username ?? '—'}</p>
+            <p>Username: {selected.lead.username ? `@${selected.lead.username}` : '—'}</p>
             <p>Состояние: {selected.state}</p>
             <p>Тех-аккаунт: {selected.technicalAccount.title}</p>
             <p>Account status: {selected.technicalAccount.status}</p>

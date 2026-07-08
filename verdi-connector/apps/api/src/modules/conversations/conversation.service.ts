@@ -267,7 +267,26 @@ export class ConversationService {
       ];
     }
 
-    return this.prisma.conversation.findMany({
+    const techAccounts = await this.prisma.technicalAccount.findMany();
+    const excludeTelegramIds = new Set<string>(['777000', '42777']);
+    const excludeUsernames = new Set<string>(['telegram']);
+    for (const account of techAccounts) {
+      if (account.telegramUserId != null) {
+        excludeTelegramIds.add(account.telegramUserId.toString());
+      }
+      for (const raw of [account.title, account.phoneMasked, account.sessionName]) {
+        if (!raw) continue;
+        const cleaned = raw.replace(/^@/, '').trim().toLowerCase();
+        if (cleaned && !cleaned.startsWith('tech_') && !cleaned.startsWith('listener_')) {
+          excludeUsernames.add(cleaned);
+        }
+        if (cleaned === 'andf1n' || cleaned === 'listener_main') {
+          excludeUsernames.add('andf1n');
+        }
+      }
+    }
+
+    const rows = await this.prisma.conversation.findMany({
       where,
       include: {
         lead: true,
@@ -275,6 +294,18 @@ export class ConversationService {
         assignedOperator: true,
       },
       orderBy: [{ lastInboundAt: 'desc' }, { updatedAt: 'desc' }],
+    });
+
+    // Client inbox only — hide Saved Messages / self chat / service chats / tech accounts.
+    return rows.filter((row) => {
+      const leadId = row.lead.telegramUserId.toString();
+      const leadUsername = (row.lead.username ?? '').toLowerCase();
+      if (excludeTelegramIds.has(leadId)) return false;
+      if (leadUsername && excludeUsernames.has(leadUsername)) return false;
+      if (row.technicalAccount.telegramUserId != null) {
+        if (row.technicalAccount.telegramUserId.toString() === leadId) return false;
+      }
+      return true;
     });
   }
 

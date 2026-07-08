@@ -20,6 +20,9 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
 
   async onModuleInit(): Promise<void> {
     await this.transport.connectSession();
+    this.adapter.on('worker-ready', (payload: Record<string, unknown>) => {
+      void this.persistTechnicalAccountIdentity(payload);
+    });
     this.adapter.on('inbound', async (payload) => {
       await this.conversations.handleInbound({
         externalChatId: payload.externalChatId,
@@ -47,6 +50,45 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
         .importTelegramDialog(dialog)
         .catch((err) => this.logger.warn(`sync-dialog import failed: ${(err as Error).message}`));
     });
+  }
+
+  private async persistTechnicalAccountIdentity(payload: Record<string, unknown>): Promise<void> {
+    const sessionName = this.config.get<string>('TELEGRAM_SESSION', 'listener_main');
+    const meId = payload.meId ? BigInt(String(payload.meId)) : null;
+    const username = payload.username ? String(payload.username) : null;
+    if (!meId) return;
+    const account = await this.prisma.technicalAccount.findFirst({ where: { sessionName } });
+    if (!account) return;
+    await this.prisma.technicalAccount.update({
+      where: { id: account.id },
+      data: {
+        telegramUserId: meId,
+        title: username ? `@${username}` : account.title,
+        phoneMasked: username ?? account.phoneMasked,
+      },
+    });
+    // Hide Saved Messages / self-chat that may already be in DB.
+    const selfLeads = await this.prisma.lead.findMany({
+      where: {
+        OR: [
+          { telegramUserId: meId },
+          ...(username ? [{ username: { equals: username, mode: 'insensitive' as const } }] : []),
+          { username: { equals: 'telegram', mode: 'insensitive' } },
+          { telegramUserId: BigInt(777000) },
+        ],
+      },
+      select: { id: true },
+    });
+    if (selfLeads.length === 0) return;
+    const deleted = await this.prisma.conversation.deleteMany({
+      where: {
+        technicalAccountId: account.id,
+        leadId: { in: selfLeads.map((l) => l.id) },
+      },
+    });
+    if (deleted.count > 0) {
+      this.logger.log(`Removed ${deleted.count} non-client conversation(s) (self/service)`);
+    }
   }
 
   async onApplicationBootstrap(): Promise<void> {

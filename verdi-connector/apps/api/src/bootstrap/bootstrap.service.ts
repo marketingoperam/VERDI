@@ -46,6 +46,7 @@ export class BootstrapService implements OnModuleInit {
         title: cloudSession === 'listener_main' ? '@andf1n' : cloudSession,
         sessionName: cloudSession,
         phoneMasked: cloudSession === 'listener_main' ? 'andf1n' : undefined,
+        telegramUserId: cloudSession === 'listener_main' ? BigInt('8228313419') : undefined,
         status: 'active' as const,
         mode: 'reply_only' as const,
       },
@@ -55,7 +56,18 @@ export class BootstrapService implements OnModuleInit {
       const existing = await this.prisma.technicalAccount.findFirst({
         where: { sessionName: acc.sessionName },
       });
-      if (existing) continue;
+      if (existing) {
+        await this.prisma.technicalAccount.update({
+          where: { id: existing.id },
+          data: {
+            title: acc.title,
+            phoneMasked: acc.phoneMasked,
+            telegramUserId: acc.telegramUserId ?? existing.telegramUserId,
+            status: 'active',
+          },
+        });
+        continue;
+      }
       await this.prisma.technicalAccount.create({ data: acc });
     }
 
@@ -72,6 +84,7 @@ export class BootstrapService implements OnModuleInit {
           body: 'Спасибо за сообщение, уточню детали и вернусь с ответом.',
         },
       ],
+      skipDuplicates: true,
     });
   }
 }
