@@ -38,6 +38,7 @@ type WorkerRuntime = {
   connected: boolean;
   meId?: string;
   meUsername?: string;
+  lastFatal?: string;
   restartDelayMs: number;
   restartTimer: NodeJS.Timeout | null;
   pendingSends: Map<string, Pending>;
@@ -227,7 +228,11 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       this.rejectAllPending(runtime, new Error(`Telegram worker disconnected (${session})`));
       this.workers.delete(session);
       this.connected = [...this.workers.values()].some((w) => w.connected);
-      if (!this.shuttingDown) {
+      // Do not endlessly restart clearly unauthorized sessions.
+      const unauthorized =
+        typeof runtime.lastFatal === 'string' &&
+        runtime.lastFatal.toLowerCase().includes('not authorized');
+      if (!this.shuttingDown && !unauthorized) {
         const delay = runtime.restartDelayMs;
         runtime.restartDelayMs = Math.min(runtime.restartDelayMs * 2, 60000);
         runtime.restartTimer = setTimeout(() => {
@@ -235,6 +240,8 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
             this.logger.error(`[${session}] restart failed: ${(e as Error).message}`),
           );
         }, delay);
+      } else if (unauthorized) {
+        this.logger.warn(`[${session}] not authorized — stop restart loop`);
       }
     });
 
@@ -338,7 +345,8 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
         this.logger.log(`[${runtime.session}] ${String(event.message ?? '')}`);
         break;
       case 'fatal':
-        this.logger.error(`[${runtime.session}] fatal: ${String(event.error ?? '')}`);
+        runtime.lastFatal = String(event.error ?? '');
+        this.logger.error(`[${runtime.session}] fatal: ${runtime.lastFatal}`);
         break;
       default:
         break;
