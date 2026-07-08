@@ -23,7 +23,17 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
     this.adapter.on('worker-ready', (payload: Record<string, unknown>) => {
       void this.persistTechnicalAccountIdentity(payload);
     });
-    this.adapter.on('inbound', async (payload) => {
+    this.adapter.on('inbound', async (payload: Record<string, unknown> & {
+      externalChatId: string;
+      telegramMessageId: string;
+      senderTelegramUserId: string;
+      senderUsername?: string;
+      senderFirstName?: string;
+      senderLastName?: string;
+      body: string;
+      receivedAt: Date;
+      sessionName?: string;
+    }) => {
       await this.conversations.handleInbound({
         externalChatId: payload.externalChatId,
         telegramMessageId: payload.telegramMessageId,
@@ -33,7 +43,9 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
         senderLastName: payload.senderLastName,
         body: payload.body,
         receivedAt: payload.receivedAt,
-        sessionName: this.config.get<string>('TELEGRAM_SESSION', 'listener_main'),
+        sessionName:
+          payload.sessionName ??
+          this.config.get<string>('TELEGRAM_SESSION', 'listener_main'),
       });
     });
     this.adapter.on('sync-dialog', (payload: Record<string, unknown>) => {
@@ -53,7 +65,8 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
   }
 
   private async persistTechnicalAccountIdentity(payload: Record<string, unknown>): Promise<void> {
-    const sessionName = this.config.get<string>('TELEGRAM_SESSION', 'listener_main');
+    const sessionName = String(payload.sessionName ?? payload.session ?? '');
+    if (!sessionName) return;
     const meId = payload.meId ? BigInt(String(payload.meId)) : null;
     const username = payload.username ? String(payload.username) : null;
     if (!meId) return;
@@ -67,7 +80,6 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
         phoneMasked: username ?? account.phoneMasked,
       },
     });
-    // Hide Saved Messages / self-chat that may already be in DB.
     const selfLeads = await this.prisma.lead.findMany({
       where: {
         OR: [
@@ -87,7 +99,7 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
       },
     });
     if (deleted.count > 0) {
-      this.logger.log(`Removed ${deleted.count} non-client conversation(s) (self/service)`);
+      this.logger.log(`Removed ${deleted.count} non-client conversation(s) for ${sessionName}`);
     }
   }
 
@@ -95,18 +107,27 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
     if (this.config.get<string>('TELEGRAM_USE_STUB', 'false') === 'true') return;
     if (this.config.get<string>('TELEGRAM_SYNC_ON_START', 'true') !== 'true') return;
 
-    const count = await this.prisma.conversation.count();
-    if (count > 0) {
-      this.logger.log(`Conversations already present (${count}) — skip startup sync`);
-      return;
-    }
-
-    this.logger.log('No conversations in DB — requesting Telegram dialog sync...');
-    try {
-      const dialogs = await this.adapter.requestSync({ limitDialogs: 40, limitMessages: 50 });
-      this.logger.log(`Telegram inbox sync requested/completed: ${dialogs} dialogs`);
-    } catch (err) {
-      this.logger.warn(`Telegram inbox sync failed: ${(err as Error).message}`);
+    for (const sessionName of this.adapter.configuredSessions()) {
+      const account = await this.prisma.technicalAccount.findFirst({ where: { sessionName } });
+      if (!account) continue;
+      const count = await this.prisma.conversation.count({
+        where: { technicalAccountId: account.id },
+      });
+      if (count > 0) {
+        this.logger.log(`[${sessionName}] conversations present (${count}) — skip startup sync`);
+        continue;
+      }
+      this.logger.log(`[${sessionName}] syncing private dialogs...`);
+      try {
+        const dialogs = await this.adapter.requestSync({
+          limitDialogs: 40,
+          limitMessages: 50,
+          sessionName,
+        });
+        this.logger.log(`[${sessionName}] sync completed: ${dialogs} dialogs`);
+      } catch (err) {
+        this.logger.warn(`[${sessionName}] sync failed: ${(err as Error).message}`);
+      }
     }
   }
 }

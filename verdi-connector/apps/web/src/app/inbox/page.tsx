@@ -12,8 +12,15 @@ type Conversation = {
   isStopListed: boolean;
   externalChatId?: string;
   lastInboundAt?: string;
+  technicalAccountId?: string;
   lead: { username?: string; firstName?: string; telegramUserId: string };
-  technicalAccount: { title: string; status: string; riskScore: number };
+  technicalAccount: {
+    id?: string;
+    title: string;
+    status: string;
+    riskScore: number;
+    sessionName?: string;
+  };
   assignedOperator?: { displayName: string };
   messages?: Message[];
 };
@@ -28,6 +35,14 @@ type Message = {
 
 type Template = { id: string; title: string; body: string };
 
+type TechAccount = {
+  id: string;
+  title: string;
+  sessionName?: string;
+  status: string;
+  riskScore: number;
+};
+
 function leadLabel(c: Conversation): string {
   if (c.lead.username) return `@${c.lead.username}`;
   if (c.lead.firstName) return c.lead.firstName;
@@ -38,6 +53,8 @@ export default function InboxPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [accounts, setAccounts] = useState<TechAccount[]>([]);
+  const [accountId, setAccountId] = useState<string>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
   const [filter, setFilter] = useState('all');
@@ -62,15 +79,28 @@ export default function InboxPage() {
 
   useEffect(() => {
     if (!token) return;
-    void loadConversations(token);
+    void api<TechAccount[]>('/technical-accounts', token)
+      .then((rows) => {
+        setAccounts(rows.filter((a) => a.status === 'active' || a.status === 'limited'));
+      })
+      .catch(() => undefined);
     void api<Template[]>('/templates', token).then(setTemplates).catch(() => undefined);
-  }, [token, filter, search]);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    void loadConversations(token);
+  }, [token, filter, search, accountId]);
 
   useEffect(() => {
     if (!token) return;
     const socket: Socket = io(WS_URL, { transports: ['websocket'] });
     socket.on('conversation.updated', (payload: Conversation) => {
       setConversations((prev) => {
+        if (accountId !== 'all') {
+          const techId = payload.technicalAccountId ?? payload.technicalAccount?.id;
+          if (techId && techId !== accountId) return prev;
+        }
         const idx = prev.findIndex((c) => c.id === payload.id);
         if (idx === -1) return [payload, ...prev];
         const copy = [...prev];
@@ -89,17 +119,18 @@ export default function InboxPage() {
     return () => {
       socket.disconnect();
     };
-  }, [token]);
+  }, [token, accountId]);
 
   async function loadConversations(authToken: string) {
     const params = new URLSearchParams();
     if (filter !== 'all') params.set('state', filter);
     if (search) params.set('search', search);
+    if (accountId !== 'all') params.set('technicalAccountId', accountId);
     try {
       const rows = await api<Conversation[]>(`/conversations?${params}`, authToken);
       setConversations(rows);
-      // Keep selection if still present; never auto-open chat on mobile list view.
       setSelectedId((prev) => (prev && rows.some((r) => r.id === prev) ? prev : null));
+      setMobileView('list');
       setStatus('');
     } catch (err) {
       setStatus((err as Error).message);
@@ -160,6 +191,14 @@ export default function InboxPage() {
           <button type="button" className="secondary" onClick={() => token && void loadConversations(token)}>
             Обновить
           </button>
+          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            <option value="all">Все тех-аккаунты</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.title}{a.sessionName ? ` (${a.sessionName})` : ''}
+              </option>
+            ))}
+          </select>
           <input
             placeholder="Поиск username"
             value={search}
@@ -184,7 +223,7 @@ export default function InboxPage() {
                 onClick={() => void openConversation(c.id)}
               >
                 <strong>{leadLabel(c)}</strong>
-                <span>{c.state} · unread {c.unreadCount}</span>
+                <span>{c.technicalAccount.title} · {c.state} · unread {c.unreadCount}</span>
                 {c.isStopListed && <em>stop-list</em>}
               </button>
             ))
@@ -243,6 +282,7 @@ export default function InboxPage() {
             <p>Username: {selected.lead.username ? `@${selected.lead.username}` : '—'}</p>
             <p>Состояние: {selected.state}</p>
             <p>Тех-аккаунт: {selected.technicalAccount.title}</p>
+            <p>Session: {selected.technicalAccount.sessionName ?? '—'}</p>
             <p>Account status: {selected.technicalAccount.status}</p>
             <p className={selected.technicalAccount.riskScore > 50 ? 'risk high' : 'risk'}>
               Risk score: {selected.technicalAccount.riskScore}

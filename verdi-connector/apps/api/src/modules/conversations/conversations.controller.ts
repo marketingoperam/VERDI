@@ -13,11 +13,15 @@ export class ConversationsController {
     @Query('state') state?: string,
     @Query('search') search?: string,
     @Query('stopListed') stopListed?: string,
+    @Query('technicalAccountId') technicalAccountId?: string,
+    @Query('sessionName') sessionName?: string,
   ) {
     const rows = await this.conversations.listConversations({
       state,
       search,
       stopListed: stopListed === undefined ? undefined : stopListed === 'true',
+      technicalAccountId,
+      sessionName,
     });
     return serializeBigInt(rows);
   }

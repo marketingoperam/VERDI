@@ -31,20 +31,26 @@ type SyncPending = {
   timer: NodeJS.Timeout;
 };
 
+type WorkerRuntime = {
+  session: string;
+  child: ChildProcessWithoutNullStreams;
+  stdoutBuffer: string;
+  connected: boolean;
+  meId?: string;
+  meUsername?: string;
+  restartDelayMs: number;
+  restartTimer: NodeJS.Timeout | null;
+  pendingSends: Map<string, Pending>;
+  pendingSyncs: Map<string, SyncPending>;
+};
+
 @Injectable()
 export class TelegramUserSessionAdapter extends EventEmitter implements TelegramTransport, OnModuleDestroy {
   private readonly logger = new Logger(TelegramUserSessionAdapter.name);
   private connected = false;
-  private worker: ChildProcessWithoutNullStreams | null = null;
-  private starting: Promise<void> | null = null;
-  private stdoutBuffer = '';
-  private readonly pendingSends = new Map<string, Pending>();
-  private readonly pendingSyncs = new Map<string, SyncPending>();
-  private meId?: string;
-  private meUsername?: string;
-  private restartTimer: NodeJS.Timeout | null = null;
   private shuttingDown = false;
-  private restartDelayMs = 5000;
+  private starting: Promise<void> | null = null;
+  private readonly workers = new Map<string, WorkerRuntime>();
   private readonly dialogs = new Map<string, TelegramDialog>();
   private readonly messages = new Map<string, TelegramInboundMessage[]>();
 
@@ -78,19 +84,16 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       this.logger.log('Stub Telegram session connected');
       return;
     }
-
     if (!this.hasApiCredentials()) {
       this.logger.warn('TELEGRAM_API_ID/HASH missing — Telegram worker not started');
       this.connected = false;
       return;
     }
-
-    await this.startWorker();
+    await this.startAllWorkers();
   }
 
   async onModuleDestroy(): Promise<void> {
     this.shuttingDown = true;
-    if (this.restartTimer) clearTimeout(this.restartTimer);
     await this.disconnect();
   }
 
@@ -104,14 +107,21 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
     return Boolean(apiId && apiHash);
   }
 
-  private sessionName(): string {
-    return this.config.get<string>('TELEGRAM_SESSION', 'listener_main');
+  configuredSessions(): string[] {
+    const multi = this.config.get<string>('TELEGRAM_SESSIONS', '');
+    if (multi.trim()) {
+      return [...new Set(multi.split(',').map((s) => s.trim()).filter(Boolean))];
+    }
+    return [this.config.get<string>('TELEGRAM_SESSION', 'listener_main')];
+  }
+
+  private primarySession(): string {
+    return this.configuredSessions()[0] ?? 'listener_main';
   }
 
   private resolveScriptPath(): string {
     const configured = this.config.get<string>('TELEGRAM_WORKER_SCRIPT', '');
     if (configured && fs.existsSync(configured)) return configured;
-
     const candidates = [
       path.resolve(process.cwd(), '../../scripts/telegram_cloud_worker.py'),
       path.resolve(process.cwd(), '../scripts/telegram_cloud_worker.py'),
@@ -130,38 +140,45 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       fs.mkdirSync(configured, { recursive: true });
       return configured;
     }
-    const candidates = [
-      path.resolve(process.cwd(), '../../.telegram-sessions'),
-      path.resolve('/var/data/telegram-sessions'),
-      path.resolve(process.cwd(), '.telegram-sessions'),
-    ];
-    const dir = candidates[0];
+    const dir = path.resolve(process.cwd(), '../../.telegram-sessions');
     fs.mkdirSync(dir, { recursive: true });
     return dir;
   }
 
-  private async startWorker(): Promise<void> {
-    if (this.worker) return;
+  private sessionB64EnvKey(session: string): string {
+    return `TELEGRAM_SESSION_B64_${session.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  }
+
+  private async startAllWorkers(): Promise<void> {
     if (this.starting) {
       await this.starting;
       return;
     }
-
-    this.starting = this.spawnWorker().finally(() => {
+    this.starting = (async () => {
+      for (const session of this.configuredSessions()) {
+        await this.spawnWorker(session);
+      }
+      this.connected = [...this.workers.values()].some((w) => w.connected);
+    })().finally(() => {
       this.starting = null;
     });
     await this.starting;
   }
 
-  private async spawnWorker(): Promise<void> {
-    if (this.worker) return;
+  private async spawnWorker(session: string): Promise<void> {
+    const existing = this.workers.get(session);
+    if (existing?.child && !existing.child.killed) return;
 
     const script = this.resolveScriptPath();
-    const session = this.sessionName();
     const sessionsDir = this.resolveSessionsDir();
     const python = this.config.get<string>('TELEGRAM_PYTHON', 'python');
+    const b64 =
+      this.config.get<string>(this.sessionB64EnvKey(session), '') ||
+      (session === this.config.get<string>('TELEGRAM_SESSION', 'listener_main')
+        ? this.config.get<string>('TELEGRAM_SESSION_B64', '')
+        : '');
 
-    this.logger.log(`Starting Telegram worker session=${session} script=${script}`);
+    this.logger.log(`Starting Telegram worker session=${session}`);
 
     const child = spawn(
       python,
@@ -177,82 +194,100 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
           TELEGRAM_API_HASH: this.config.get<string>('TELEGRAM_API_HASH', ''),
           TELEGRAM_SESSION: session,
           TELEGRAM_SESSIONS_DIR: sessionsDir,
+          ...(b64 ? { TELEGRAM_SESSION_B64: b64 } : {}),
         },
       },
     );
 
-    this.worker = child;
-    this.stdoutBuffer = '';
+    const runtime: WorkerRuntime = {
+      session,
+      child,
+      stdoutBuffer: '',
+      connected: false,
+      restartDelayMs: 5000,
+      restartTimer: null,
+      pendingSends: new Map(),
+      pendingSyncs: new Map(),
+    };
+    this.workers.set(session, runtime);
 
-    child.stdout.on('data', (chunk: Buffer) => this.onStdout(chunk.toString('utf8')));
+    child.stdout.on('data', (chunk: Buffer) => this.onStdout(runtime, chunk.toString('utf8')));
     child.stderr.on('data', (chunk: Buffer) => {
       const text = chunk.toString('utf8').trim();
-      if (text) this.logger.warn(`Telegram worker stderr: ${text.slice(0, 2000)}`);
+      if (text) this.logger.warn(`[${session}] stderr: ${text.slice(0, 2000)}`);
     });
     child.on('error', (err) => {
-      this.logger.error(`Telegram worker spawn error: ${err.message}`);
-      this.connected = false;
+      this.logger.error(`[${session}] spawn error: ${err.message}`);
+      runtime.connected = false;
+      this.connected = [...this.workers.values()].some((w) => w.connected);
     });
     child.on('close', (code, signal) => {
-      this.logger.warn(`Telegram worker exited code=${code} signal=${signal ?? ''}`);
-      this.worker = null;
-      this.connected = false;
-      this.rejectAllPending(new Error('Telegram worker disconnected'));
+      this.logger.warn(`[${session}] exited code=${code} signal=${signal ?? ''}`);
+      runtime.connected = false;
+      this.rejectAllPending(runtime, new Error(`Telegram worker disconnected (${session})`));
+      this.workers.delete(session);
+      this.connected = [...this.workers.values()].some((w) => w.connected);
       if (!this.shuttingDown) {
-        const delay = this.restartDelayMs;
-        this.restartDelayMs = Math.min(this.restartDelayMs * 2, 60000);
-        this.restartTimer = setTimeout(() => {
-          void this.startWorker().catch((e) =>
-            this.logger.error(`Telegram worker restart failed: ${(e as Error).message}`),
+        const delay = runtime.restartDelayMs;
+        runtime.restartDelayMs = Math.min(runtime.restartDelayMs * 2, 60000);
+        runtime.restartTimer = setTimeout(() => {
+          void this.spawnWorker(session).catch((e) =>
+            this.logger.error(`[${session}] restart failed: ${(e as Error).message}`),
           );
         }, delay);
       }
     });
 
-    // Wait briefly for ready event (non-blocking overall — inbound can arrive later)
     await new Promise<void>((resolve) => {
-      const onReady = () => {
-        this.restartDelayMs = 5000;
+      const onReady = (payload: { session?: string }) => {
+        if (payload?.session && payload.session !== session) return;
+        runtime.restartDelayMs = 5000;
         clearTimeout(timer);
+        this.off('worker-ready', onReady as (...args: unknown[]) => void);
         resolve();
       };
       const timer = setTimeout(() => {
-        this.off('worker-ready', onReady);
+        this.off('worker-ready', onReady as (...args: unknown[]) => void);
         resolve();
-      }, 20000);
-      this.once('worker-ready', onReady);
+      }, 25000);
+      this.on('worker-ready', onReady as (...args: unknown[]) => void);
     });
   }
 
-  private onStdout(chunk: string): void {
-    this.stdoutBuffer += chunk;
+  private onStdout(runtime: WorkerRuntime, chunk: string): void {
+    runtime.stdoutBuffer += chunk;
     let idx: number;
-    while ((idx = this.stdoutBuffer.indexOf('\n')) >= 0) {
-      const line = this.stdoutBuffer.slice(0, idx).trim();
-      this.stdoutBuffer = this.stdoutBuffer.slice(idx + 1);
+    while ((idx = runtime.stdoutBuffer.indexOf('\n')) >= 0) {
+      const line = runtime.stdoutBuffer.slice(0, idx).trim();
+      runtime.stdoutBuffer = runtime.stdoutBuffer.slice(idx + 1);
       if (!line) continue;
       try {
-        this.handleWorkerEvent(JSON.parse(line) as Record<string, unknown>);
+        this.handleWorkerEvent(runtime, JSON.parse(line) as Record<string, unknown>);
       } catch {
-        this.logger.warn(`Invalid worker JSON: ${line.slice(0, 200)}`);
+        this.logger.warn(`[${runtime.session}] invalid JSON: ${line.slice(0, 200)}`);
       }
     }
   }
 
-  private handleWorkerEvent(event: Record<string, unknown>): void {
+  private handleWorkerEvent(runtime: WorkerRuntime, event: Record<string, unknown>): void {
     const type = String(event.type ?? '');
     switch (type) {
       case 'ready':
+        runtime.connected = true;
+        runtime.meId = event.meId ? String(event.meId) : undefined;
+        runtime.meUsername = event.username ? String(event.username) : undefined;
         this.connected = true;
-        this.meId = event.meId ? String(event.meId) : undefined;
-        this.meUsername = event.username ? String(event.username) : undefined;
         this.logger.log(
-          `Telegram worker ready @${this.meUsername ?? '?'} id=${this.meId ?? '?'}`,
+          `Telegram worker ready session=${runtime.session} @${runtime.meUsername ?? '?'} id=${runtime.meId ?? '?'}`,
         );
-        this.emit('worker-ready', event);
+        this.emit('worker-ready', {
+          ...event,
+          session: runtime.session,
+          sessionName: runtime.session,
+        });
         break;
       case 'inbound': {
-        const message: TelegramInboundMessage = {
+        const message: TelegramInboundMessage & { sessionName?: string } = {
           externalChatId: String(event.externalChatId),
           telegramMessageId: String(event.telegramMessageId),
           senderTelegramUserId: String(event.senderTelegramUserId),
@@ -261,16 +296,17 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
           senderLastName: event.senderLastName ? String(event.senderLastName) : undefined,
           body: String(event.body ?? ''),
           receivedAt: new Date(String(event.receivedAt ?? new Date().toISOString())),
+          sessionName: String(event.sessionName ?? runtime.session),
         };
         this.emit('inbound', message);
         break;
       }
       case 'send_ok': {
         const reqId = String(event.reqId ?? '');
-        const pending = this.pendingSends.get(reqId);
+        const pending = runtime.pendingSends.get(reqId);
         if (!pending) break;
         clearTimeout(pending.timer);
-        this.pendingSends.delete(reqId);
+        runtime.pendingSends.delete(reqId);
         pending.resolve({
           telegramMessageId: String(event.telegramMessageId),
           sentAt: new Date(String(event.sentAt)),
@@ -279,68 +315,77 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       }
       case 'send_err': {
         const reqId = String(event.reqId ?? '');
-        const pending = this.pendingSends.get(reqId);
+        const pending = runtime.pendingSends.get(reqId);
         if (!pending) break;
         clearTimeout(pending.timer);
-        this.pendingSends.delete(reqId);
+        runtime.pendingSends.delete(reqId);
         pending.reject(new Error(String(event.error ?? 'send failed')));
         break;
       }
       case 'sync_dialog':
-        this.emit('sync-dialog', event);
+        this.emit('sync-dialog', { ...event, sessionName: event.sessionName ?? runtime.session });
         break;
       case 'sync_done': {
         const reqId = String(event.reqId ?? '');
-        const pending = this.pendingSyncs.get(reqId);
+        const pending = runtime.pendingSyncs.get(reqId);
         if (!pending) break;
         clearTimeout(pending.timer);
-        this.pendingSyncs.delete(reqId);
+        runtime.pendingSyncs.delete(reqId);
         pending.resolve(Number(event.dialogs ?? 0));
         break;
       }
       case 'log':
-        this.logger.log(`[worker] ${String(event.message ?? '')}`);
+        this.logger.log(`[${runtime.session}] ${String(event.message ?? '')}`);
         break;
       case 'fatal':
-        this.logger.error(`Telegram worker fatal: ${String(event.error ?? '')}`);
+        this.logger.error(`[${runtime.session}] fatal: ${String(event.error ?? '')}`);
         break;
       default:
         break;
     }
   }
 
-  private writeCommand(cmd: Record<string, unknown>): void {
-    if (!this.worker?.stdin.writable) {
+  private writeCommand(runtime: WorkerRuntime, cmd: Record<string, unknown>): void {
+    if (!runtime.child.stdin.writable) {
       throw new Error('TRANSPORT_DISCONNECTED');
     }
-    this.worker.stdin.write(`${JSON.stringify(cmd)}\n`);
+    runtime.child.stdin.write(`${JSON.stringify(cmd)}\n`);
   }
 
-  private rejectAllPending(error: Error): void {
-    for (const [id, pending] of this.pendingSends) {
+  private rejectAllPending(runtime: WorkerRuntime, error: Error): void {
+    for (const [id, pending] of runtime.pendingSends) {
       clearTimeout(pending.timer);
       pending.reject(error);
-      this.pendingSends.delete(id);
+      runtime.pendingSends.delete(id);
     }
-    for (const [id, pending] of this.pendingSyncs) {
+    for (const [id, pending] of runtime.pendingSyncs) {
       clearTimeout(pending.timer);
       pending.reject(error);
-      this.pendingSyncs.delete(id);
+      runtime.pendingSyncs.delete(id);
     }
+  }
+
+  private getWorker(sessionName?: string): WorkerRuntime {
+    const preferred = sessionName || this.primarySession();
+    const worker = this.workers.get(preferred) ?? this.workers.get(this.primarySession());
+    if (!worker || !worker.connected) {
+      throw new Error(`TRANSPORT_DISCONNECTED (${preferred})`);
+    }
+    return worker;
   }
 
   async disconnect(): Promise<void> {
     this.connected = false;
-    if (this.worker) {
-      const child = this.worker;
-      this.worker = null;
+    for (const runtime of this.workers.values()) {
+      if (runtime.restartTimer) clearTimeout(runtime.restartTimer);
       try {
-        child.stdin.end();
+        runtime.child.stdin.end();
       } catch {
         // ignore
       }
-      child.kill('SIGTERM');
+      runtime.child.kill('SIGTERM');
     }
+    this.workers.clear();
   }
 
   async fetchDialogs(): Promise<TelegramDialog[]> {
@@ -358,24 +403,21 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
   async sendMessage(
     conversationExternalId: string,
     text: string,
-    _sessionName?: string,
+    sessionName?: string,
   ): Promise<SendMessageResult> {
     if (this.useStub()) {
       return this.sendMessageStub(conversationExternalId, text);
     }
-    if (!this.connected || !this.worker) {
-      throw new Error('TRANSPORT_DISCONNECTED');
-    }
-
+    const runtime = this.getWorker(sessionName);
     const reqId = randomUUID();
     return new Promise<SendMessageResult>((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.pendingSends.delete(reqId);
+        runtime.pendingSends.delete(reqId);
         reject(new Error('Telegram send timeout'));
       }, 45000);
-      this.pendingSends.set(reqId, { resolve, reject, timer });
+      runtime.pendingSends.set(reqId, { resolve, reject, timer });
       try {
-        this.writeCommand({
+        this.writeCommand(runtime, {
           cmd: 'send',
           reqId,
           peerId: conversationExternalId,
@@ -383,25 +425,26 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
         });
       } catch (error) {
         clearTimeout(timer);
-        this.pendingSends.delete(reqId);
+        runtime.pendingSends.delete(reqId);
         reject(error as Error);
       }
     });
   }
 
-  requestSync(options?: { limitDialogs?: number; limitMessages?: number }): Promise<number> {
-    if (this.useStub() || !this.worker) {
-      return Promise.resolve(0);
-    }
+  requestSync(
+    options?: { limitDialogs?: number; limitMessages?: number; sessionName?: string },
+  ): Promise<number> {
+    if (this.useStub()) return Promise.resolve(0);
+    const runtime = this.getWorker(options?.sessionName);
     const reqId = randomUUID();
     return new Promise<number>((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.pendingSyncs.delete(reqId);
+        runtime.pendingSyncs.delete(reqId);
         reject(new Error('Telegram sync timeout'));
       }, 120000);
-      this.pendingSyncs.set(reqId, { resolve, reject, timer });
+      runtime.pendingSyncs.set(reqId, { resolve, reject, timer });
       try {
-        this.writeCommand({
+        this.writeCommand(runtime, {
           cmd: 'sync',
           reqId,
           limitDialogs: options?.limitDialogs ?? 30,
@@ -409,7 +452,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
         });
       } catch (error) {
         clearTimeout(timer);
-        this.pendingSyncs.delete(reqId);
+        runtime.pendingSyncs.delete(reqId);
         reject(error as Error);
       }
     });
@@ -436,9 +479,10 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
   }
 
   async getAccountState(): Promise<TelegramAccountState> {
+    const primary = this.workers.get(this.primarySession());
     return {
       connected: this.connected,
-      telegramUserId: this.meId,
+      telegramUserId: primary?.meId,
       status: this.connected ? 'active' : 'disconnected',
     };
   }

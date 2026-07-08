@@ -32,11 +32,15 @@ services:
         value: "true"
       - key: TELEGRAM_SESSION
         value: listener_main
+      - key: TELEGRAM_SESSIONS
+        value: "listener_main,tech_13309563469"
       - key: TELEGRAM_API_ID
         value: "30268202"
       - key: TELEGRAM_API_HASH
         sync: false
       - key: TELEGRAM_SESSION_B64
+        sync: false
+      - key: TELEGRAM_SESSION_B64_tech_13309563469
         sync: false
       - key: TELEGRAM_PYTHON
         value: python3

@@ -39,36 +39,48 @@ export class BootstrapService implements OnModuleInit {
       });
     }
 
-    // Ensure technical account exists even if DB already has an operator.
-    const cloudSession = this.config.get<string>('TELEGRAM_SESSION', 'listener_main');
-    const technicalAccounts = [
-      {
-        title: cloudSession === 'listener_main' ? '@andf1n' : cloudSession,
-        sessionName: cloudSession,
-        phoneMasked: cloudSession === 'listener_main' ? 'andf1n' : undefined,
-        telegramUserId: cloudSession === 'listener_main' ? BigInt('8228313419') : undefined,
-        status: 'active' as const,
-        mode: 'reply_only' as const,
-      },
-    ];
+    const sessions = this.resolveSessions();
+    for (const sessionName of sessions) {
+      const title =
+        sessionName === 'listener_main'
+          ? '@andf1n'
+          : sessionName === 'tech_13309563469'
+            ? '@samyi_classny_paren'
+            : sessionName;
+      const phoneMasked =
+        sessionName === 'listener_main'
+          ? 'andf1n'
+          : sessionName === 'tech_13309563469'
+            ? 'samyi_classny_paren'
+            : sessionName;
+      const telegramUserId =
+        sessionName === 'listener_main' ? BigInt('8228313419') : undefined;
 
-    for (const acc of technicalAccounts) {
       const existing = await this.prisma.technicalAccount.findFirst({
-        where: { sessionName: acc.sessionName },
+        where: { sessionName },
       });
       if (existing) {
         await this.prisma.technicalAccount.update({
           where: { id: existing.id },
           data: {
-            title: acc.title,
-            phoneMasked: acc.phoneMasked,
-            telegramUserId: acc.telegramUserId ?? existing.telegramUserId,
+            title,
+            phoneMasked,
+            telegramUserId: telegramUserId ?? existing.telegramUserId,
             status: 'active',
           },
         });
-        continue;
+      } else {
+        await this.prisma.technicalAccount.create({
+          data: {
+            title,
+            sessionName,
+            phoneMasked,
+            telegramUserId,
+            status: 'active',
+            mode: 'reply_only',
+          },
+        });
       }
-      await this.prisma.technicalAccount.create({ data: acc });
     }
 
     const defaultTemplates = [
@@ -97,11 +109,18 @@ export class BootstrapService implements OnModuleInit {
         where: { id: existing.id },
         data: { isActive: true, body: template.body, category: template.category },
       });
-      // Soft-disable duplicate chips with the same title so the UI shows only two.
       await this.prisma.template.updateMany({
         where: { title: template.title, id: { not: existing.id } },
         data: { isActive: false },
       });
     }
+  }
+
+  private resolveSessions(): string[] {
+    const multi = this.config.get<string>('TELEGRAM_SESSIONS', '');
+    if (multi.trim()) {
+      return [...new Set(multi.split(',').map((s) => s.trim()).filter(Boolean))];
+    }
+    return [this.config.get<string>('TELEGRAM_SESSION', 'listener_main')];
   }
 }

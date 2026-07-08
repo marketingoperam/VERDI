@@ -256,10 +256,14 @@ export class ConversationService {
     state?: string;
     search?: string;
     stopListed?: boolean;
+    technicalAccountId?: string;
+    sessionName?: string;
   }) {
     const where: Record<string, unknown> = {};
     if (filter?.state) where.state = filter.state;
     if (filter?.stopListed !== undefined) where.isStopListed = filter.stopListed;
+    if (filter?.technicalAccountId) where.technicalAccountId = filter.technicalAccountId;
+    if (filter?.sessionName) where.technicalAccount = { sessionName: filter.sessionName };
     if (filter?.search) {
       where.OR = [
         { lead: { username: { contains: filter.search, mode: 'insensitive' } } },
