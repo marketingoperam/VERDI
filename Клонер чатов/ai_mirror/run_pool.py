@@ -36,6 +36,11 @@ from run import (
     send_to_mirror_pooled,
 )
 from run_multi import Route, message_matches_topic, sender_allowed
+from mirror_cleanup import (
+    delete_mirror_service_message,
+    mirror_service_should_delete,
+    purge_mirror_service_messages,
+)
 
 POOL_LISTENER = "listener_main"
 POOL_SESSIONS = ROOT / "sessions" / f"pool_{uuid.uuid4().hex[:8]}"
@@ -63,6 +68,10 @@ def load_bindings(path: Path) -> dict[str, str]:
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
     return {}
+
+
+def save_bindings(path: Path, data: dict[str, str]) -> None:
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def backfill_state_path(pool: str) -> Path:
@@ -111,17 +120,30 @@ class PoolRunner:
         self.route_meta = {
             r["name"]: r for r in config["routes"]
         }
+        self.route_tech: dict[str, list[str]] = {}
+        for item in config["routes"]:
+            if item.get("tech_sessions"):
+                self.route_tech[item["name"]] = list(item["tech_sessions"])
         self.listener: TelegramClient | None = None
         self.tech_clients: dict[str, TelegramClient] = {}
 
-    def assign_session(self, sender_id: int) -> str:
-        key = str(sender_id)
-        if key in self.bindings:
-            return self.bindings[key]
-        if not self.tech_sessions:
-            raise RuntimeError("Пул tech_sessions пуст")
+    def tech_pool_for(self, route: Route) -> list[str]:
+        custom = self.route_tech.get(route.name)
+        if custom:
+            return custom
+        return self.tech_sessions
 
-        session_name = min(self.tech_sessions, key=lambda s: self.usage[s])
+    def assign_session(self, sender_id: int, route: Route) -> str:
+        key = f"{route.name}:{sender_id}"
+        pool = self.tech_pool_for(route)
+        if key in self.bindings:
+            bound = self.bindings[key]
+            if bound in pool:
+                return bound
+        if not pool:
+            raise RuntimeError(f"Пул tech_sessions пуст для {route.name}")
+
+        session_name = min(pool, key=lambda s: self.usage[s])
         self.bindings[key] = session_name
         self.usage[session_name] += 1
         from run import _profile_states
@@ -131,7 +153,7 @@ class PoolRunner:
         print(f"  закреплён sender {sender_id} → {session_name}")
         return session_name
 
-    async def connect_all(self) -> None:
+    async def connect_listener(self) -> None:
         api_id, api_hash = api_credentials()
         self.listener = TelegramClient(
             pool_session(POOL_LISTENER),
@@ -143,24 +165,6 @@ class PoolRunner:
         if not await self.listener.is_user_authorized():
             raise RuntimeError("listener_main не авторизован")
 
-        for name in self.tech_sessions:
-            client = TelegramClient(
-                pool_session(name),
-                api_id,
-                api_hash,
-                sequential_updates=True,
-            )
-            await client.connect()
-            if not await client.is_user_authorized():
-                print(f"  [{name}] не авторизован — исключён из пула")
-                await client.disconnect()
-                continue
-            self.tech_clients[name] = client
-            await client.get_dialogs(limit=80)
-
-        if not self.tech_clients:
-            raise RuntimeError("Нет авторизованных техаккаунтов в пуле")
-
         for route in self.routes:
             route.source_entity = await self.listener.get_entity(route.source_chat_id)
             route.mirror_entity = await self.listener.get_entity(route.mirror_chat_id)
@@ -170,12 +174,45 @@ class PoolRunner:
         print(f"  Клонер пула: {self.pool}")
         print("=" * 52)
         print(f"Слушатель: {me.first_name} (@{me.username})")
-        print(f"Маршрутов: {len(self.routes)} | техаккаунтов: {len(self.tech_clients)}")
+        print(f"Маршрутов: {len(self.routes)} | техаккаунтов в пуле: {len(self.tech_sessions)}")
         for route in self.routes:
             src = getattr(route.source_entity, "title", route.source_chat_id)
             mir = getattr(route.mirror_entity, "title", route.mirror_chat_id)
             print(f"  • [{route.name}] {src} → {mir}")
         print()
+
+    async def ensure_tech_client(self, session_name: str) -> TelegramClient | None:
+        if session_name in self.tech_clients:
+            return self.tech_clients[session_name]
+
+        api_id, api_hash = api_credentials()
+        client = TelegramClient(
+            pool_session(session_name),
+            api_id,
+            api_hash,
+            sequential_updates=True,
+        )
+        await client.connect()
+        if not await client.is_user_authorized():
+            print(f"  [{session_name}] не авторизован — пропуск")
+            await client.disconnect()
+            return None
+        self.tech_clients[session_name] = client
+        return client
+
+    async def connect_all(self) -> None:
+        await self.connect_listener()
+        assert self.listener is not None
+
+        for name in self.tech_sessions:
+            client = await self.ensure_tech_client(name)
+            if client:
+                await client.get_dialogs(limit=80)
+
+        if not self.tech_clients:
+            raise RuntimeError("Нет авторизованных техаккаунтов в пуле")
+
+        print(f"Подключено техаккаунтов: {len(self.tech_clients)}\n")
 
     async def run(self) -> None:
         await self.connect_all()
@@ -184,6 +221,44 @@ class PoolRunner:
 
         ignore_bots = bool(self.defaults.get("ignore_bots", True))
         ignore_service = bool(self.defaults.get("ignore_service_messages", True))
+
+        mirror_chats = []
+        seen_mirrors: set[int] = set()
+        for route in self.routes:
+            mid = route.mirror_chat_id
+            if mid not in seen_mirrors:
+                seen_mirrors.add(mid)
+                mirror_chats.append(route.mirror_entity)
+
+        async def purge_mirrors_background() -> None:
+            print("Очистка сервисных сообщений в зеркалах…")
+            total = 0
+            processed: set[int] = set()
+            for route in self.routes:
+                mid = route.mirror_chat_id
+                if mid in processed:
+                    continue
+                processed.add(mid)
+                un = self.route_meta.get(route.name, {}).get("mirror_username", "")
+                n = await purge_mirror_service_messages(self.listener, route.mirror_entity)
+                total += n
+                if n:
+                    label = f"@{un}" if un else getattr(route.mirror_entity, "title", mid)
+                    print(f"  {label}: удалено {n}")
+            if total:
+                print(f"  всего удалено: {total}\n")
+
+        @self.listener.on(events.NewMessage(chats=mirror_chats))
+        async def on_mirror_service(event):
+            if not mirror_service_should_delete(event.message):
+                return
+            if await delete_mirror_service_message(
+                self.listener, event.chat_id, event.message
+            ):
+                un = getattr(event.chat, "username", None) or event.chat_id
+                print(f"  🗑 сервисное в @{un} #{event.message.id}")
+
+        asyncio.create_task(purge_mirrors_background())
 
         @self.listener.on(events.NewMessage())
         async def on_message(event):
@@ -202,7 +277,7 @@ class PoolRunner:
                 if not isinstance(sender, User):
                     continue
 
-                session_name = self.assign_session(sender.id)
+                session_name = self.assign_session(sender.id, route)
                 tech = self.tech_clients.get(session_name)
                 if not tech:
                     print(f"  ✗ нет клиента {session_name}")
@@ -249,9 +324,10 @@ class PoolRunner:
         *,
         min_delay_min: float = 3.0,
         max_delay_min: float = 10.0,
+        then_live: bool = False,
     ) -> None:
         """Разовое копирование последних N сообщений по каждому маршруту (хронологический порядок)."""
-        await self.connect_all()
+        await self.connect_listener()
         assert self.listener is not None
 
         ignore_bots = bool(self.defaults.get("ignore_bots", True))
@@ -294,12 +370,15 @@ class PoolRunner:
                     continue
                 pending.append((route, msg))
 
+        # Чередуем маршруты по времени — не блокируем «задания» пока идут «отчёты»
+        pending.sort(key=lambda pair: pair[1].date)
+
         print(f"\nК копированию: {len(pending)} сообщений\n")
 
         for idx, (route, msg) in enumerate(pending):
             sender = await msg.get_sender()
-            session_name = self.assign_session(sender.id)
-            tech = self.tech_clients.get(session_name)
+            session_name = self.assign_session(sender.id, route)
+            tech = await self.ensure_tech_client(session_name)
             if not tech:
                 print(f"  ✗ нет клиента {session_name}")
                 continue
@@ -334,6 +413,9 @@ class PoolRunner:
 
         print("\nБэкфилл завершён.")
         await self.disconnect_all()
+        if then_live:
+            print("\nЗапуск клонера в прямом эфире…\n")
+            await self.run()
 
 
 def main() -> None:

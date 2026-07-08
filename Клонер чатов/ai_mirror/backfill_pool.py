@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -32,8 +31,16 @@ def main() -> None:
     p.add_argument("--max-delay", type=float, default=10.0, help="макс. пауза между копиями (мин)")
     p.add_argument(
         "--then-live",
+        dest="then_live",
         action="store_true",
-        help="после бэкфилла запустить run_pool.py (прямой эфир)",
+        default=True,
+        help="после бэкфилла запустить run_pool.py (прямой эфир, по умолчанию вкл.)",
+    )
+    p.add_argument(
+        "--no-then-live",
+        dest="then_live",
+        action="store_false",
+        help="только бэкфилл, без прямого эфира",
     )
     args = p.parse_args()
 
@@ -43,15 +50,9 @@ def main() -> None:
             limit=args.limit,
             min_delay_min=args.min_delay,
             max_delay_min=args.max_delay,
+            then_live=args.then_live,
         )
     )
-
-    if args.then_live:
-        print("\nЗапуск клонера в прямом эфире…")
-        subprocess.Popen(
-            [sys.executable, "-u", str(ROOT / "run_pool.py"), "--config", args.config],
-            cwd=str(ROOT),
-        )
 
 
 if __name__ == "__main__":

@@ -61,7 +61,7 @@ services:
           name: verdi-connector-db
           property: connectionString
       - key: CORS_ORIGIN
-        sync: false
+        value: https://verdi-connector-web.onrender.com
       - key: SEED_OPERATOR_EMAIL
         value: andf1n@verdi.local
       - key: SEED_OPERATOR_PASSWORD
@@ -82,6 +82,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: https://verdi-connector-api.onrender.com
       - key: NEXT_PUBLIC_WS_URL
-        sync: false
+        value: https://verdi-connector-api.onrender.com

@@ -126,6 +126,39 @@ async def create_chat_pair(data: ChatPairCreate, db: AsyncSession = Depends(get_
     )
 
 
+@router.post("/ai-mirror/sync")
+async def sync_ai_mirror(db: AsyncSession = Depends(get_db)):
+    from app.services.ai_mirror import (
+        get_ai_mirror_store,
+        restrict_tech_pool,
+        sync_routes_to_db,
+    )
+
+    store = get_ai_mirror_store(reload=True)
+    store.apply_runtime_settings()
+    routes = await sync_routes_to_db(db, store)
+    pool_stats = await restrict_tech_pool(db, store)
+    await db.commit()
+    return {
+        "status": "ok",
+        "pool": store.pool,
+        "routes": routes,
+        "bindings": len(store.bindings),
+        **pool_stats,
+    }
+
+
+@router.post("/listener/restart")
+async def restart_listener_endpoint():
+    from app.main import restart_listener
+
+    started = await restart_listener()
+    health = await get_health_status()
+    if not started:
+        raise HTTPException(status_code=400, detail="Слушатель не запущен: проверьте .env и сессию listener_main")
+    return {"status": "restarting", "listener": health.listener}
+
+
 async def _build_setup_status(db: AsyncSession) -> SetupStatusResponse:
     settings = get_settings()
 

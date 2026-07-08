@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     profile_sync_enabled: bool = False
     profile_sync_interval_hours: int = 24
-    delete_mode: Literal["hard_delete", "soft_delete"] = "soft_delete"
+    delete_mode: Literal["hard_delete", "soft_delete"] = "hard_delete"
     ignore_bots: bool = True
     ignore_service_messages: bool = True
     max_media_size_mb: int = 50
@@ -47,6 +47,9 @@ class Settings(BaseSettings):
 
     sessions_dir: Path = Path("sessions")
     media_cache_dir: Path = Path("media_cache")
+
+    tg_proxy: str = ""
+    tg_proxy_type: str = "http"
 
     @property
     def resolved_sessions_dir(self) -> Path:

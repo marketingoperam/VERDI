@@ -23,6 +23,7 @@ class SourceChatResponse(BaseModel):
     id: int
     telegram_chat_id: int
     title: str
+    route_name: str | None = None
     is_active: bool
     mirror_chat_id: int | None
     created_at: datetime
@@ -31,12 +32,14 @@ class SourceChatResponse(BaseModel):
 class MirrorChatCreate(BaseModel):
     telegram_chat_id: int
     title: str = ""
+    mirror_username: str | None = None
     is_active: bool = True
     mode: Literal["safe", "profile_sync"] = "safe"
 
 
 class MirrorChatUpdate(BaseModel):
     title: str | None = None
+    mirror_username: str | None = None
     is_active: bool | None = None
     mode: Literal["safe", "profile_sync"] | None = None
 
@@ -47,6 +50,7 @@ class MirrorChatResponse(BaseModel):
     id: int
     telegram_chat_id: int
     title: str
+    mirror_username: str | None = None
     is_active: bool
     mode: str
     created_at: datetime
@@ -256,3 +260,24 @@ class DashboardResponse(BaseModel):
     setup: SetupStatusResponse
     health: HealthResponse
     recent_logs: list[SyncLogResponse]
+
+
+class UserActivityResponse(BaseModel):
+    telegram_user_id: int
+    username: str | None
+    display_name: str
+    message_count: int
+    reaction_count: int
+    total_count: int
+    last_active_at: datetime | None
+    tech_session: str | None = None
+
+
+class UserActivitySummary(BaseModel):
+    mirror_chat_id: int
+    title: str
+    mirror_username: str | None
+    route_name: str | None
+    users_count: int
+    messages_total: int
+    reactions_total: int

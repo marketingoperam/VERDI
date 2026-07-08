@@ -1,7 +1,7 @@
 const API = '/api/v1';
 
 const App = {
-  data: { settings: null, employees: [], sessions: [] },
+  data: { settings: null, employees: [], sessions: [], activityMirrorChatId: null },
 
   async init() {
     this.bindNav();
@@ -48,6 +48,7 @@ const App = {
       chats: () => this.loadChats(),
       accounts: () => this.loadAccounts(),
       employees: () => this.loadEmployees(),
+      activity: () => this.loadActivity(),
       logs: () => this.loadLogs(),
       settings: () => this.loadSettings(),
     };
@@ -58,6 +59,7 @@ const App = {
     setInterval(() => {
       const active = document.querySelector('.page.active');
       if (active?.id === 'page-dashboard') this.refreshDashboard(true);
+      if (active?.id === 'page-activity') this.loadActivityUsers(true);
     }, 30000);
   },
 
@@ -223,6 +225,96 @@ const App = {
       this.toast(isActive ? 'Пара выключена' : 'Пара включена', 'success');
       this.loadChats();
     } catch (e) { this.toast(e.message, 'error'); }
+  },
+
+  /* ── Activity ── */
+  async loadActivity() {
+    try {
+      const summary = await this.api('/activity/summary');
+      if (!this.data.activityMirrorChatId && summary.length) {
+        this.data.activityMirrorChatId = summary[0].mirror_chat_id;
+      }
+      const select = document.getElementById('activityChatSelect');
+      if (select) {
+        select.innerHTML = summary.map(s => `
+          <option value="${s.mirror_chat_id}" ${s.mirror_chat_id === this.data.activityMirrorChatId ? 'selected' : ''}>
+            ${s.mirror_username ? `@${s.mirror_username}` : s.title}${s.route_name ? ` — ${s.route_name}` : ''}
+          </option>`).join('');
+      }
+      this.renderActivitySummaryCards(summary);
+      await this.loadActivityUsers();
+    } catch (e) { this.toast(e.message, 'error'); }
+  },
+
+  onActivityChatChange(chatId) {
+    this.data.activityMirrorChatId = parseInt(chatId, 10);
+    this.loadActivityUsers();
+    this.api('/activity/summary').then(s => this.renderActivitySummaryCards(s)).catch(() => {});
+  },
+
+  renderActivitySummaryCards(summary) {
+    const el = document.getElementById('activitySummaryCards');
+    if (!el) return;
+    const chat = summary.find(s => s.mirror_chat_id === this.data.activityMirrorChatId) || summary[0];
+    if (!chat) {
+      el.innerHTML = '<div class="card"><div class="card-label">Нет активных чатов</div><div class="card-value">—</div></div>';
+      return;
+    }
+    const total = chat.messages_total + chat.reactions_total;
+    el.innerHTML = `
+      <div class="card"><div class="card-label">Участников</div><div class="card-value">${chat.users_count}</div></div>
+      <div class="card"><div class="card-label">Сообщений</div><div class="card-value success">${chat.messages_total}</div></div>
+      <div class="card"><div class="card-label">Реакций</div><div class="card-value" style="color:#fdcb6e">${chat.reactions_total}</div></div>
+      <div class="card"><div class="card-label">Всего активностей</div><div class="card-value">${total}</div></div>
+    `;
+  },
+
+  async loadActivityUsers(silent = false) {
+    const chatId = this.data.activityMirrorChatId;
+    const el = document.getElementById('activityTable');
+    if (!chatId || !el) return;
+    const sort = document.getElementById('activitySort')?.value || 'messages';
+    try {
+      const users = await this.api(`/activity?mirror_chat_id=${chatId}&sort=${sort}`);
+      if (!users.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📈</div>
+          <h4>Нет данных</h4>
+          <p>Нажмите «Сканировать историю» для подсчёта сообщений или дождитесь новых событий в чате</p></div>`;
+        return;
+      }
+      el.innerHTML = `<table><thead><tr>
+        <th>Пользователь</th><th>Username</th><th>Сообщения</th><th>Реакции</th><th>Всего</th><th>Тех-аккаунт</th><th>Последняя активность</th>
+      </tr></thead><tbody>${users.map(u => `<tr>
+        <td><strong>${this.escapeHtml(u.display_name)}</strong></td>
+        <td>${u.username ? `<code>@${this.escapeHtml(u.username)}</code>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><span class="badge badge-info">${u.message_count}</span></td>
+        <td><span class="badge badge-warning">${u.reaction_count}</span></td>
+        <td><strong>${u.total_count}</strong></td>
+        <td>${u.tech_session ? `<code>${this.escapeHtml(u.tech_session)}</code>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="color:var(--text-muted);font-size:.85rem">${this.formatDate(u.last_active_at)}</td>
+      </tr>`).join('')}</tbody></table>`;
+    } catch (e) {
+      if (!silent) this.toast(e.message, 'error');
+    }
+  },
+
+  async backfillActivity() {
+    const chatId = this.data.activityMirrorChatId;
+    if (!chatId) {
+      this.toast('Выберите чат', 'error');
+      return;
+    }
+    try {
+      this.toast('Сканирование истории клон-чата...', 'info');
+      const result = await this.api(`/activity/backfill?mirror_chat_id=${chatId}&limit=5000`, { method: 'POST' });
+      this.toast(`Готово: ${result.recorded} сообщений, ${result.users ?? '—'} участников`, 'success');
+      await this.loadActivity();
+    } catch (e) { this.toast(e.message, 'error'); }
+  },
+
+  escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   },
 
   /* ── Accounts ── */
@@ -613,7 +705,7 @@ const App = {
         <div class="form-group">
           <label>Режим</label>
           <select id="f_mode">
-            <option value="safe">Безопасный (с пометкой автора)</option>
+            <option value="safe">Безопасный (текст как в оригинале)</option>
             <option value="profile_sync">Синхронизация профилей</option>
           </select>
         </div>

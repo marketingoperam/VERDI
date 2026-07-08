@@ -1,3 +1,5 @@
+import asyncio
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,9 +59,12 @@ class MessageDispatcher:
     async def _resolve_chats(
         self, telegram_chat_id: int
     ) -> tuple[SourceChat | None, MirrorChat | None]:
+        from app.telegram.proxy import chat_id_variants
+
+        variants = chat_id_variants(telegram_chat_id)
         result = await self.db.execute(
             select(SourceChat).where(
-                SourceChat.telegram_chat_id == telegram_chat_id,
+                SourceChat.telegram_chat_id.in_(variants),
                 SourceChat.is_active.is_(True),
             )
         )
@@ -84,6 +89,9 @@ class MessageDispatcher:
             return "bot_message"
 
         text = message.message or message.text or ""
+        if not text and not message.media:
+            return "empty_message"
+
         if self.settings.message_filter_mode == "text_only" and not text and not message.media:
             return "no_text"
 
@@ -104,17 +112,20 @@ class MessageDispatcher:
 
         sender = await message.get_sender()
         if not sender or not hasattr(sender, "id"):
+            logger.debug("message_skipped_no_sender", message_id=message.id)
             return
 
         filter_reason = self._should_filter(message, sender)
         if filter_reason:
-            logger.debug("message_filtered", reason=filter_reason, message_id=message.id)
+            logger.info("message_filtered", reason=filter_reason, message_id=message.id)
             return
 
-        listener_client = await self.session_pool.get_listener_client()
-        first_name, last_name, username = await self.mirror_sender.fetch_sender_info(
-            listener_client, sender.id
-        )
+        if isinstance(sender, User):
+            first_name = sender.first_name or ""
+            last_name = sender.last_name
+            username = sender.username
+        else:
+            first_name, last_name, username = "", None, None
         employee = await self.binding.get_or_create_employee(
             sender.id, first_name, last_name, username
         )
@@ -122,7 +133,9 @@ class MessageDispatcher:
         if employee.is_muted or not employee.is_active:
             return
 
-        session, used_fallback = await self.binding.resolve_session(employee, mirror_chat.mode)
+        session, used_fallback = await self.binding.resolve_session(
+            employee, source_chat, mirror_chat.mode
+        )
         if not session:
             await self._log_event(
                 "new_message",
@@ -131,11 +144,29 @@ class MessageDispatcher:
                 source_message_id=message.id,
                 error_text="No session available for employee",
             )
+            await self.db.commit()
             return
 
         try:
             client = await self.session_pool.get_client_for_session(session)
-            await self.profile_sync.sync_if_needed(employee, session, client, mirror_chat.mode)
+            listener = await self.session_pool.get_listener_client()
+            try:
+                await asyncio.wait_for(
+                    self.profile_sync.sync_if_needed(
+                        employee,
+                        session,
+                        client,
+                        mirror_chat.mode,
+                        avatar_client=listener,
+                    ),
+                    timeout=25.0,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "profile_sync_timeout",
+                    employee_id=employee.id,
+                    session_name=session.session_name,
+                )
 
             reply_to_mirror_id = None
             if message.reply_to and message.reply_to.reply_to_msg_id:
@@ -164,10 +195,12 @@ class MessageDispatcher:
             )
             await self.db.commit()
         except Exception as exc:
+            source_chat_db_id = source_chat.id
+            source_msg_id = message.id
             await self.db.rollback()
             logger.error(
                 "mirror_failed",
-                message_id=message.id,
+                message_id=source_msg_id,
                 error=str(exc).encode("ascii", "backslashreplace").decode(),
             )
             async with async_session_factory() as err_db:
@@ -175,8 +208,8 @@ class MessageDispatcher:
                 await dispatcher._log_event(
                     "new_message",
                     "error",
-                    source_chat_id=source_chat.id,
-                    source_message_id=message.id,
+                    source_chat_id=source_chat_db_id,
+                    source_message_id=source_msg_id,
                     error_text=str(exc),
                 )
                 await err_db.commit()

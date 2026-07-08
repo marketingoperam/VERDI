@@ -3,6 +3,8 @@ from datetime import datetime
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 from telethon import TelegramClient
+from telethon.errors import UserAlreadyParticipantError
+from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import User
 
 from app.models import Employee, MessageMap, MirrorChat, MirrorMode, SessionPool, SourceChat
@@ -46,6 +48,20 @@ class MirrorSender:
     async def format_safe_edit(self, new_text: str, mapping: MessageMap) -> str:
         return new_text
 
+    async def _resolve_mirror_entity(self, client: TelegramClient, mirror_chat: MirrorChat):
+        try:
+            return await client.get_entity(mirror_chat.telegram_chat_id)
+        except (ValueError, TypeError):
+            username = (mirror_chat.mirror_username or "").strip().lstrip("@")
+            if not username:
+                raise
+            try:
+                channel = await client.get_entity(username)
+                await client(JoinChannelRequest(channel=channel))
+            except UserAlreadyParticipantError:
+                pass
+            return await client.get_entity(mirror_chat.telegram_chat_id)
+
     async def send_mirror_message(
         self,
         db: AsyncSession,
@@ -58,19 +74,10 @@ class MirrorSender:
         reply_to_mirror_id: int | None = None,
         used_fallback: bool = False,
     ) -> int | None:
-        mirror_entity = await client.get_entity(mirror_chat.telegram_chat_id)
+        mirror_entity = await self._resolve_mirror_entity(client, mirror_chat)
         mapper = MessageMapper(db)
 
         text = message.message or message.text or ""
-        if mirror_chat.mode == MirrorMode.SAFE.value or used_fallback:
-            text = self.format_safe_message(
-                text,
-                employee,
-                source_chat,
-                message.date,
-            )
-            if used_fallback:
-                text = f"⚠️ [fallback-аккаунт]\n{text}"
 
         media_path = None
         try:

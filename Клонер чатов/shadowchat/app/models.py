@@ -46,6 +46,7 @@ class SourceChat(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     telegram_chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    route_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     mirror_chat_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("mirror_chats.id"), nullable=True
@@ -61,6 +62,7 @@ class MirrorChat(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     telegram_chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    mirror_username: Mapped[str | None] = mapped_column(String(128), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     mode: Mapped[str] = mapped_column(String(32), default=MirrorMode.SAFE.value, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -147,6 +149,27 @@ class SyncLog(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     error_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class UserActivity(Base):
+    __tablename__ = "user_activity"
+    __table_args__ = (
+        UniqueConstraint("mirror_chat_id", "telegram_user_id", name="uq_activity_mirror_user"),
+        Index("ix_user_activity_mirror", "mirror_chat_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    mirror_chat_id: Mapped[int] = mapped_column(Integer, ForeignKey("mirror_chats.id"), nullable=False)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    first_name: Mapped[str] = mapped_column(String(128), default="", nullable=False)
+    last_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    reaction_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class AppSettings(Base):

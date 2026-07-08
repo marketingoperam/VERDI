@@ -54,12 +54,15 @@ class Route:
     sync_name: bool = False
     sync_avatar: bool = False
     use_ai: bool = False
+    tech_sessions: tuple[str, ...] = ()
     source_entity=None
     mirror_entity=None
 
     @classmethod
     def from_dict(cls, data: dict, defaults: dict) -> Route:
         sync_profile = bool(data.get("sync_profile", defaults.get("sync_profile", False)))
+        tech = data.get("tech_sessions")
+        tech_sessions = tuple(str(x) for x in tech) if tech else ()
         return cls(
             name=str(data["name"]),
             route_type=str(data.get("type", "generic")),
@@ -74,6 +77,7 @@ class Route:
             sync_name=bool(data.get("sync_name", sync_profile)),
             sync_avatar=bool(data.get("sync_avatar", sync_profile)),
             use_ai=bool(data.get("use_ai", defaults.get("use_ai", False))),
+            tech_sessions=tech_sessions,
         )
 
 

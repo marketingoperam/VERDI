@@ -31,6 +31,7 @@
         <button class="nav-item" data-page="chats"><span class="icon">💬</span><span>Чаты</span></button>
         <button class="nav-item" data-page="accounts"><span class="icon">👤</span><span>Аккаунты</span></button>
         <button class="nav-item" data-page="employees"><span class="icon">👥</span><span>Сотрудники</span></button>
+        <button class="nav-item" data-page="activity"><span class="icon">📈</span><span>Активности</span></button>
         <button class="nav-item" data-page="logs"><span class="icon">📋</span><span>Журнал</span></button>
         <button class="nav-item" data-page="settings"><span class="icon">⚙️</span><span>Настройки</span></button>
         <button class="nav-item" data-page="help"><span class="icon">❓</span><span>Помощь</span></button>
@@ -105,6 +106,36 @@
         </div>
         <div class="panel">
           <div class="panel-body table-wrap" id="employeesTable"></div>
+        </div>
+      </section>
+
+      <!-- Activity -->
+      <section class="page" id="page-activity">
+        <div class="page-header">
+          <div>
+            <h2>Активности</h2>
+            <p>Сообщения и реакции в клон-чатах заданий (multiverdichat4, 5, 6)</p>
+          </div>
+          <div class="header-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="App.loadActivity()">↻ Обновить</button>
+            <button class="btn btn-primary btn-sm" onclick="App.backfillActivity()">Сканировать историю</button>
+          </div>
+        </div>
+        <div class="cards" id="activitySummaryCards"></div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Участники чата</h3>
+            <div class="activity-toolbar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <select id="activityChatSelect" class="input-select" onchange="App.onActivityChatChange(this.value)"></select>
+              <select id="activitySort" class="input-select" onchange="App.loadActivityUsers()">
+                <option value="messages">По сообщениям</option>
+                <option value="reactions">По реакциям</option>
+                <option value="total">По сумме</option>
+                <option value="name">По имени</option>
+              </select>
+            </div>
+          </div>
+          <div class="panel-body table-wrap" id="activityTable"></div>
         </div>
       </section>
 

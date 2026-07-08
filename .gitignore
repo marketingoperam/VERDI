@@ -35,6 +35,16 @@ output/
 Клонер чатов/shadowchat/data/*.db
 Клонер чатов/shadowchat/data/*.db-*
 Клонер чатов/shadowchat/data/qr_*.html
+Клонер чатов/shadowchat/media_cache/*
+!Клонер чатов/shadowchat/media_cache/.gitkeep
+
+# Локальные БД инвайтинга
+инвайтинг/*.sqlite
+инвайтинг/data/
+
+# Telegram session exports (never commit)
+**/.telegram-sessions/
+**/*.b64.txt
 
 # OS
 .DS_Store

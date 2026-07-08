@@ -50,11 +50,7 @@ class EditHandler:
 
         mirror_entity = await client.get_entity(mirror_chat.telegram_chat_id)
 
-        if mirror_chat.mode == MirrorMode.SAFE.value:
-            formatted = await self.mirror_sender.format_safe_edit(new_text, mapping)
-            edit_text = formatted
-        else:
-            edit_text = new_text
+        edit_text = new_text
 
         try:
             await client.edit_message(

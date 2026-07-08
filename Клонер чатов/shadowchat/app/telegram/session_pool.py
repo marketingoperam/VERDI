@@ -11,6 +11,7 @@ from telethon.sessions import StringSession
 
 from app.config import get_settings
 from app.models import SessionPool, SessionType
+from app.telegram.proxy import parse_proxy, proxy_label
 
 logger = structlog.get_logger()
 
@@ -28,6 +29,45 @@ class SessionPoolManager:
     def _session_path(self, session_name: str) -> str:
         return str(self.sessions_dir / session_name)
 
+    def _proxy(self) -> tuple | None:
+        raw = self.settings.tg_proxy.strip()
+        if not raw:
+            return None
+        try:
+            return parse_proxy(raw, self.settings.tg_proxy_type)
+        except ValueError as exc:
+            logger.warning("proxy_parse_failed", error=str(exc))
+            return None
+
+    def _make_client(
+        self,
+        session,
+        api_id: int,
+        api_hash: str,
+    ) -> TelegramClient:
+        proxy = self._proxy()
+        if proxy:
+            logger.info("telethon_proxy", via=proxy_label(proxy))
+        return TelegramClient(
+            session,
+            api_id,
+            api_hash,
+            proxy=proxy,
+            use_ipv6=False,
+            connection_retries=8,
+            retry_delay=2,
+            timeout=30,
+            request_retries=5,
+        )
+
+    async def reset_listener_client(self) -> None:
+        if self._listener_client:
+            try:
+                await self._listener_client.disconnect()
+            except Exception:
+                pass
+        self._listener_client = None
+
     async def get_listener_client(self) -> TelegramClient:
         if self._listener_client and self._listener_client.is_connected():
             return self._listener_client
@@ -36,7 +76,7 @@ class SessionPoolManager:
             if self._listener_client and self._listener_client.is_connected():
                 return self._listener_client
 
-            client = TelegramClient(
+            client = self._make_client(
                 self._session_path(self.settings.listener_session),
                 self.settings.listener_api_id,
                 self.settings.listener_api_hash,
@@ -60,14 +100,14 @@ class SessionPoolManager:
                     return client
 
             if session.session_type == SessionType.BOT.value and session.bot_token:
-                client = TelegramClient(
+                client = self._make_client(
                     StringSession(),
                     session.api_id,
                     session.api_hash,
                 )
                 await client.start(bot_token=session.bot_token)
             elif getattr(session, "session_string", None):
-                client = TelegramClient(
+                client = self._make_client(
                     StringSession(session.session_string),
                     session.api_id,
                     session.api_hash,
@@ -76,7 +116,7 @@ class SessionPoolManager:
                 if not await client.is_user_authorized():
                     raise RuntimeError(f"Session {session.session_name} is not authorized")
             else:
-                client = TelegramClient(
+                client = self._make_client(
                     self._session_path(session.session_name),
                     session.api_id,
                     session.api_hash,

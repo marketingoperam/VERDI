@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 
-from app.api import chats, dashboard, employees, session_auth, session_import, sessions, settings as settings_api
+from app.api import activity, chats, dashboard, employees, session_auth, session_import, sessions, settings as settings_api
 from app.config import get_settings
 from app.db import async_session_factory, engine
 from app.health import get_health_status, set_listener_ref
@@ -31,6 +31,29 @@ def _should_start_listener() -> bool:
         return False
     session_file = settings.resolved_sessions_dir / f"{settings.listener_session}.session"
     return session_file.exists()
+
+
+async def restart_listener() -> bool:
+    global _listener_task, _listener
+    if _listener:
+        await _listener.stop()
+    if _listener_task:
+        _listener_task.cancel()
+        try:
+            await _listener_task
+        except asyncio.CancelledError:
+            pass
+    _listener = None
+    _listener_task = None
+    set_listener_ref(None)
+
+    if not _should_start_listener():
+        return False
+
+    _listener = TelegramListener()
+    set_listener_ref(_listener)
+    _listener_task = asyncio.create_task(_listener.start())
+    return True
 
 
 @asynccontextmanager
@@ -57,6 +80,26 @@ async def lifespan(app: FastAPI):
                     )
                 except Exception:
                     pass
+                try:
+                    await conn.execute(
+                        text("ALTER TABLE mirror_chats ADD COLUMN mirror_username VARCHAR(128)")
+                    )
+                except Exception:
+                    pass
+                try:
+                    await conn.execute(
+                        text("ALTER TABLE source_chats ADD COLUMN route_name VARCHAR(64)")
+                    )
+                except Exception:
+                    pass
+                try:
+                    cols = await conn.execute(text("PRAGMA table_info(user_activity)"))
+                    col_names = {row[1] for row in cols.fetchall()}
+                    if col_names and "source_chat_id" in col_names and "mirror_chat_id" not in col_names:
+                        await conn.execute(text("DROP TABLE user_activity"))
+                except Exception:
+                    pass
+                await conn.run_sync(Base.metadata.create_all)
     except Exception as exc:
         logger.warning("db_init_failed", error=str(exc))
 
@@ -67,6 +110,23 @@ async def lifespan(app: FastAPI):
             synced = await session_import_service.sync_disk_sessions(db)
             if synced:
                 logger.info("sessions_synced_from_disk", count=synced)
+
+            from app.services.ai_mirror import (
+                get_ai_mirror_store,
+                restrict_tech_pool,
+                sync_routes_to_db,
+            )
+
+            store = get_ai_mirror_store(reload=True)
+            store.apply_runtime_settings()
+            routes_synced = await sync_routes_to_db(db, store)
+            pool_stats = await restrict_tech_pool(db, store)
+            logger.info(
+                "ai_mirror_synced",
+                routes=routes_synced,
+                **pool_stats,
+            )
+
             await db.commit()
 
             result = await db.execute(select(AppSettings))
@@ -122,6 +182,7 @@ app = FastAPI(
 )
 
 api_router = APIRouter(prefix="/api/v1")
+api_router.include_router(activity.router)
 api_router.include_router(chats.source_router)
 api_router.include_router(chats.mirror_router)
 api_router.include_router(employees.router)

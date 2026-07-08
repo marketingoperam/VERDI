@@ -1,6 +1,8 @@
 import redis.asyncio as aioredis
 from sqlalchemy import text
 
+import asyncio
+
 from app.config import get_settings
 from app.db import async_session_factory
 from app.schemas import HealthResponse
@@ -11,6 +13,10 @@ _listener_ref = None
 def set_listener_ref(listener) -> None:
     global _listener_ref
     _listener_ref = listener
+
+
+def get_listener_ref():
+    return _listener_ref
 
 
 async def get_health_status() -> HealthResponse:
@@ -34,6 +40,17 @@ async def get_health_status() -> HealthResponse:
 
     if _listener_ref is None or not _listener_ref._running:
         listener_status = "stopped"
+    elif hasattr(_listener_ref, "is_connected") and not _listener_ref.is_connected():
+        listener_status = "disconnected"
+    else:
+        try:
+            client = _listener_ref.session_pool._listener_client
+            if client and client.is_connected():
+                await asyncio.wait_for(client.get_me(), timeout=8.0)
+            else:
+                listener_status = "disconnected"
+        except Exception as exc:
+            listener_status = f"unreachable: {exc}"
 
     overall = "ok" if all(s == "ok" for s in (db_status, redis_status, listener_status)) else "degraded"
     return HealthResponse(

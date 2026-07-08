@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Инвайтинг — Панель</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <script>
+    (function () {
+      var saved = localStorage.getItem('inviting-theme');
+      var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <h1>Инвайтинг</h1>
+        <span>инвайт + холодная отписка</span>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-page="control">Управление</button>
+        <button class="nav-item" data-page="accounts">Аккаунты</button>
+        <button class="nav-item" data-page="targets">База</button>
+        <button class="nav-item" data-page="logs">Журнал</button>
+        <button class="nav-item" data-page="help">Помощь</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="theme-toggle" role="group" aria-label="Тема оформления">
+          <button class="theme-btn" id="themeDark" type="button" onclick="App.setTheme('dark')">🌙 Тёмная</button>
+          <button class="theme-btn" id="themeLight" type="button" onclick="App.setTheme('light')">☀️ Светлая</button>
+        </div>
+        <div class="status-pill">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Загрузка...</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="page active" id="page-control">
+        <div class="page-header">
+          <div>
+            <h2>Управление</h2>
+            <p>Ссылка, лимиты и запуск</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="App.refresh()">↻ Обновить</button>
+            <button class="btn btn-primary btn-sm" id="btnStart" onclick="App.start()">Старт</button>
+            <button class="btn btn-secondary btn-sm" id="btnStop" onclick="App.stop()">Стоп</button>
+          </div>
+        </div>
+
+        <div class="cards" id="cards"></div>
+        <div class="panel" id="blockersPanel" style="display:none">
+          <div class="panel-header"><h3>Почему не работает</h3></div>
+          <div class="panel-body" id="blockersList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Настройки инвайта</h3></div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label>Ссылка на чат/канал</label>
+              <input id="s_chat_link" placeholder="https://t.me/+xxxxx или https://t.me/channelname" />
+              <p class="hint">Инвайтеры сначала зайдут в чат, потом будут добавлять пользователей</p>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Пауза между инвайтами (сек)</label>
+                <input id="s_delay" type="number" min="0" max="86400" />
+              </div>
+              <div class="form-group">
+                <label>Лимит приглашений в день</label>
+                <input id="s_daily" type="number" min="0" max="100000" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Аккаунты-инвайтеры (через запятую)</label>
+              <input id="s_inviters" placeholder="inviter_01, inviter_02" />
+              <p class="hint">Имена из вкладки «Аккаунты» с ролью <code>inviter</code>. Не пересекаются с отпиской.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Холодная отписка</h3></div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input id="s_outreach_enabled" type="checkbox" style="width:auto" />
+                Писать в ЛС сразу после инвайта (только что заинвайченным)
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Текст сообщения</label>
+              <textarea id="s_outreach_msg" rows="4" placeholder="Привет! Добавили вас в чат…"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Пауза между отписками (сек)</label>
+                <input id="s_outreach_delay" type="number" min="0" max="86400" />
+              </div>
+              <div class="form-group">
+                <label>Лимит отписок в день (на 1 outreach-аккаунт)</label>
+                <input id="s_outreach_daily" type="number" min="0" max="100000" value="20" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Аккаунты для отписки (через запятую)</label>
+              <input id="s_outreach" placeholder="outreach_01, outreach_02" />
+              <p class="hint">Только роль <code>outreach</code>. Другой пул, не инвайтеры.</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              <button class="btn btn-secondary btn-sm" onclick="App.startOutreach()">Старт отписки</button>
+              <button class="btn btn-secondary btn-sm" onclick="App.stopOutreach()">Стоп отписки</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 24px">
+          <button class="btn btn-primary" onclick="App.saveSettings()">Сохранить</button>
+          <button class="btn btn-secondary" onclick="App.probeSessions()">Проверить аккаунты</button>
+        </div>
+      </section>
+
+      <section class="page" id="page-accounts">
+        <div class="page-header">
+          <div>
+            <h2>Аккаунты</h2>
+            <p>Вход по телефону + коду Telegram (без .session файлов)</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="App.loadAccounts()">↻ Обновить</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Добавить аккаунт</h3></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Имя (ярлык)</label>
+                <input id="acc_name" placeholder="inviter_01 или outreach_01" />
+              </div>
+              <div class="form-group">
+                <label>Роль</label>
+                <select id="acc_role">
+                  <option value="inviter">inviter — только инвайт</option>
+                  <option value="outreach">outreach — только холодная отписка</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="App.createAccount()">Создать</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Список</h3></div>
+          <div class="panel-body" id="accountsList"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-targets">
+        <div class="page-header">
+          <div>
+            <h2>База</h2>
+            <p>Очередь: инвайт → отписка</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="file" id="csvFile" accept=".csv,.txt,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="input-file" />
+            <button class="btn btn-primary btn-sm" onclick="App.uploadCsv()">Загрузить базу</button>
+            <button class="btn btn-secondary btn-sm" onclick="App.loadTargets()">↻ Обновить</button>
+            <button class="btn btn-secondary btn-sm" onclick="App.resetTargets()">Сбросить всё</button>
+            <button class="btn btn-secondary btn-sm" onclick="App.resetOutreach()">Сбросить отписку</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="targetsTable"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-logs">
+        <div class="page-header">
+          <div>
+            <h2>Журнал</h2>
+            <p>Инвайты и отписки</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="App.loadLogs()">↻ Обновить</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body table-wrap" id="logsTable"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-help">
+        <div class="page-header">
+          <div>
+            <h2>Помощь</h2>
+            <p>Запуск и требования</p>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="help"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

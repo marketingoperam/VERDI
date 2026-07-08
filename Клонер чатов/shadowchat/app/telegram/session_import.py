@@ -202,6 +202,8 @@ class SessionImportService:
         added = 0
         for path in sorted(sessions_dir.glob("*.session")):
             name = path.stem
+            if name == settings.listener_session:
+                continue
             if not SESSION_NAME_RE.match(name):
                 continue
             result = await db.execute(

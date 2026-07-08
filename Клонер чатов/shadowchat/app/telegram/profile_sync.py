@@ -45,6 +45,8 @@ class ProfileSyncService:
         session: SessionPool,
         client: TelegramClient,
         mirror_mode: str,
+        *,
+        avatar_client: TelegramClient | None = None,
     ) -> None:
         if not self.is_enabled_for_mirror(mirror_mode):
             return
@@ -53,13 +55,22 @@ class ProfileSyncService:
 
         interval = timedelta(hours=self.settings.profile_sync_interval_hours)
         now = datetime.now(timezone.utc)
-        if session.last_profile_sync_at and (now - session.last_profile_sync_at) < interval:
+        last_sync = session.last_profile_sync_at
+        if last_sync and last_sync.tzinfo is None:
+            # SQLite may return naive datetimes even when column is timezone-aware.
+            last_sync = last_sync.replace(tzinfo=timezone.utc)
+            session.last_profile_sync_at = last_sync
+            await self.db.flush()
+
+        if last_sync and (now - last_sync) < interval:
             await self._sync_name_if_changed(employee, session, client)
             return
 
         try:
             await self._sync_name_if_changed(employee, session, client)
-            await self._sync_avatar_if_needed(employee, session, client)
+            await self._sync_avatar_if_needed(
+                employee, session, client, avatar_client=avatar_client
+            )
             session.last_profile_sync_at = now
             await self.db.flush()
             logger.info(
@@ -100,16 +111,23 @@ class ProfileSyncService:
         logger.info("profile_name_updated", session_name=session.session_name)
 
     async def _sync_avatar_if_needed(
-        self, employee: Employee, session: SessionPool, client: TelegramClient
+        self,
+        employee: Employee,
+        session: SessionPool,
+        client: TelegramClient,
+        *,
+        avatar_client: TelegramClient | None = None,
     ) -> None:
+        avatar_path = self.media_handler.cache_dir / f"avatar_{employee.id}.jpg"
         try:
-            photos = await client.get_profile_photos(employee.telegram_user_id, limit=1)
+            source = avatar_client or client
+            photos = await source.get_profile_photos(employee.telegram_user_id, limit=1)
             if not photos:
                 return
 
-            path = await client.download_media(
+            path = await source.download_media(
                 photos[0],
-                file=str(self.media_handler.cache_dir / f"avatar_{employee.id}.jpg"),
+                file=str(avatar_path),
             )
             if not path:
                 return
@@ -136,7 +154,6 @@ class ProfileSyncService:
             await self.db.flush()
             logger.info("profile_avatar_updated", session_name=session.session_name)
         finally:
-            avatar_path = self.media_handler.cache_dir / f"avatar_{employee.id}.jpg"
             self.media_handler.cleanup(avatar_path if avatar_path.exists() else None)
 
 
