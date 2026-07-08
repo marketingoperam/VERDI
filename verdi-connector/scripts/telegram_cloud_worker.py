@@ -53,26 +53,34 @@ def resolve_session_path(session: str, sessions_dir: Path) -> Path:
     return preferred
 
 
-def prepare_session_file(session: str, sessions_dir: Path) -> Path:
+def _session_b64_for(session: str) -> str:
+    specific = os.environ.get(f"TELEGRAM_SESSION_B64_{session}") or ""
+    if specific.strip():
+        return specific.strip()
+    return (os.environ.get("TELEGRAM_SESSION_B64") or "").strip()
+
+
+def prepare_session_file(session: str, sessions_dir: Path, *, force_rewrite: bool = False) -> Path:
     """Materialize Telethon SQLite session (needs a writable path).
 
     Important: never overwrite an existing writable session on every restart —
     Telethon updates the SQLite file after connect; rewriting stale B64 races
     and can raise 'too many values to unpack'.
+    Use force_rewrite=True to reinstall from env after auth failure.
     """
     import base64
 
     sessions_dir.mkdir(parents=True, exist_ok=True)
     dest = sessions_dir / f"{session}.session"
 
-    if dest.is_file() and dest.stat().st_size > 0:
+    if dest.is_file() and dest.stat().st_size > 0 and not force_rewrite:
         log("info", f"Using existing session file {dest}")
         return sessions_dir / session
 
-    b64 = (os.environ.get("TELEGRAM_SESSION_B64") or "").strip()
+    b64 = _session_b64_for(session)
     if b64:
         dest.write_bytes(base64.b64decode(b64))
-        log("info", f"Wrote session from TELEGRAM_SESSION_B64 -> {dest}")
+        log("info", f"Wrote session from env B64 -> {dest} (force={force_rewrite})")
         return sessions_dir / session
 
     secret_candidates = [
@@ -210,7 +218,13 @@ async def main_async(args: argparse.Namespace) -> None:
     client = TelegramClient(str(session_base), api_id, api_hash)
     await client.connect()
     if not await client.is_user_authorized():
-        raise RuntimeError(f"Session {session} is not authorized")
+        await client.disconnect()
+        log("warn", f"Session {session} unauthorized — reinstalling from env B64")
+        session_base = prepare_session_file(session, sessions_dir, force_rewrite=True)
+        client = TelegramClient(str(session_base), api_id, api_hash)
+        await client.connect()
+        if not await client.is_user_authorized():
+            raise RuntimeError(f"Session {session} is not authorized")
 
     me = await client.get_me()
     me_id = int(me.id)
