@@ -1,0 +1,20 @@
+# dependencies
+**/node_modules/
+**/.next/
+**/dist/
+**/coverage/
+
+# env & local db
+**/.env
+**/.env.local
+**/*.db
+**/*.db-journal
+
+# logs / caches
+**/*.log
+**/.turbo/
+**/.cache/
+
+# OS / IDE
+.DS_Store
+Thumbs.db

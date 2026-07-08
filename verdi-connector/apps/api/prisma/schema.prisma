@@ -1,0 +1,306 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OperatorRole {
+  admin
+  operator
+  supervisor
+}
+
+enum TechnicalAccountStatus {
+  active
+  paused
+  limited
+  banned
+}
+
+enum TechnicalAccountMode {
+  reply_only
+  controlled_initiation
+  full_manual
+}
+
+enum ConversationState {
+  new
+  active
+  awaiting_operator
+  awaiting_user
+  moderation
+  transferred
+  closed
+}
+
+enum FirstContactType {
+  none
+  manual
+  template
+  automation
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+  internal_note
+  system
+}
+
+enum SenderType {
+  lead
+  operator
+  system
+  technical_account
+}
+
+enum DeliveryStatus {
+  received
+  pending
+  sent
+  failed
+  blocked
+}
+
+enum OutboxMessageType {
+  reply
+  initiation
+  template_reply
+  command_reply
+}
+
+enum PolicyDecision {
+  pending
+  allowed
+  blocked
+}
+
+enum OutboxSendStatus {
+  pending
+  queued
+  sent
+  failed
+}
+
+enum ModerationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum RiskEventType {
+  spam_report_risk
+  duplicate_pattern
+  high_outbound_ratio
+  stop_request
+  delivery_failure
+  account_pause
+}
+
+enum RiskSeverity {
+  low
+  medium
+  high
+}
+
+enum AuditActorType {
+  operator
+  system
+}
+
+enum StopListSource {
+  manual
+  user_request
+  policy
+}
+
+model Operator {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  role         OperatorRole @default(operator)
+  displayName  String
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  assignedConversations Conversation[] @relation("AssignedOperator")
+  outboxMessages        OutboxMessage[]
+  reviewedCases         ModerationCase[] @relation("ReviewedBy")
+  stopListEntries       StopListEntry[]  @relation("CreatedBy")
+}
+
+model TechnicalAccount {
+  id                    String                 @id @default(uuid())
+  title                 String
+  /// ShadowChat/Telethon session name (e.g. tech_13309563469, listener_main)
+  sessionName           String?                @unique
+  phoneMasked           String?
+  telegramUserId        BigInt?                @unique
+  status                TechnicalAccountStatus @default(active)
+  mode                  TechnicalAccountMode   @default(reply_only)
+  warmupScore           Int                    @default(0)
+  riskScore             Int                    @default(0)
+  dailyInitiationLimit  Int                    @default(20)
+  hourlyInitiationLimit Int                    @default(5)
+  dailyReplyLimit       Int                    @default(200)
+  sessionEncrypted      String?
+  lastActiveAt          DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  conversations Conversation[]
+  outboxMessages OutboxMessage[]
+  riskEvents     RiskEvent[]
+}
+
+model Lead {
+  id              String    @id @default(uuid())
+  telegramUserId  BigInt    @unique
+  username        String?
+  firstName       String?
+  lastName        String?
+  source          String?
+  expectedContact Boolean   @default(false)
+  invitedAt       DateTime?
+  activatedAt     DateTime?
+  tags            Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  conversations  Conversation[]
+  stopListEntry  StopListEntry?
+}
+
+model Conversation {
+  id                  String            @id @default(uuid())
+  leadId              String
+  technicalAccountId  String
+  assignedOperatorId  String?
+  state               ConversationState @default(new)
+  firstContactType    FirstContactType  @default(none)
+  externalChatId      String?
+  lastInboundAt       DateTime?
+  lastOutboundAt      DateTime?
+  unreadCount         Int               @default(0)
+  isStopListed        Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  lead             Lead             @relation(fields: [leadId], references: [id])
+  technicalAccount TechnicalAccount @relation(fields: [technicalAccountId], references: [id])
+  assignedOperator Operator?        @relation("AssignedOperator", fields: [assignedOperatorId], references: [id])
+  messages         Message[]
+  outboxMessages   OutboxMessage[]
+  moderationCases  ModerationCase[]
+  riskEvents       RiskEvent[]
+
+  @@unique([leadId, technicalAccountId])
+  @@index([state])
+  @@index([assignedOperatorId])
+}
+
+model Message {
+  id                String           @id @default(uuid())
+  conversationId    String
+  direction         MessageDirection
+  senderType        SenderType
+  senderId          String?
+  body              String
+  normalizedBody    String
+  telegramMessageId String?
+  deliveryStatus    DeliveryStatus   @default(received)
+  createdAt         DateTime         @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model OutboxMessage {
+  id                 String            @id @default(uuid())
+  conversationId     String
+  operatorId         String?
+  technicalAccountId String
+  body               String
+  normalizedBody     String
+  messageType        OutboxMessageType
+  policyDecision     PolicyDecision    @default(pending)
+  blockReason        String?
+  sendStatus         OutboxSendStatus  @default(pending)
+  retryCount         Int               @default(0)
+  scheduledAt        DateTime          @default(now())
+  sentAt             DateTime?
+  createdAt          DateTime          @default(now())
+
+  conversation     Conversation     @relation(fields: [conversationId], references: [id])
+  operator         Operator?        @relation(fields: [operatorId], references: [id])
+  technicalAccount TechnicalAccount @relation(fields: [technicalAccountId], references: [id])
+
+  @@index([sendStatus, scheduledAt])
+}
+
+model Template {
+  id        String   @id @default(uuid())
+  title     String
+  category  String
+  body      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModerationCase {
+  id             String           @id @default(uuid())
+  conversationId String
+  status         ModerationStatus @default(pending)
+  reason         String?
+  reviewedById   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  reviewedBy   Operator?    @relation("ReviewedBy", fields: [reviewedById], references: [id])
+}
+
+model RiskEvent {
+  id                 String        @id @default(uuid())
+  technicalAccountId String
+  conversationId     String?
+  type               RiskEventType
+  severity           RiskSeverity
+  meta               Json
+  createdAt          DateTime      @default(now())
+
+  technicalAccount TechnicalAccount @relation(fields: [technicalAccountId], references: [id])
+  conversation     Conversation?    @relation(fields: [conversationId], references: [id])
+}
+
+model AuditLog {
+  id         String         @id @default(uuid())
+  actorType  AuditActorType
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  meta       Json
+  createdAt  DateTime       @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model StopListEntry {
+  id          String         @id @default(uuid())
+  leadId      String         @unique
+  reason      String
+  source      StopListSource
+  createdById String?
+  createdAt   DateTime       @default(now())
+
+  lead      Lead      @relation(fields: [leadId], references: [id])
+  createdBy Operator? @relation("CreatedBy", fields: [createdById], references: [id])
+}

@@ -1,0 +1,322 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { normalizeBody, resolveTelegramPeerId } from '../../common/utils/text.util';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { RiskControlService } from '../risk-control/risk-control.service';
+
+export interface InboundEvent {
+  externalChatId: string;
+  telegramMessageId: string;
+  senderTelegramUserId: string;
+  senderUsername?: string;
+  senderFirstName?: string;
+  senderLastName?: string;
+  body: string;
+  receivedAt: Date;
+}
+
+export interface TelegramDialogImport {
+  /** ShadowChat/Telethon session name, e.g. tech_13309563469 */
+  sessionName?: string;
+  externalChatId: string;
+  peerTelegramUserId: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  messages: Array<{
+    direction: 'inbound' | 'outbound';
+    body: string;
+    telegramMessageId: string;
+    sentAt: string;
+  }>;
+}
+
+@Injectable()
+export class ConversationService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtime: RealtimeGateway,
+    private readonly riskControl: RiskControlService,
+  ) {}
+
+  async importTelegramDialog(payload: TelegramDialogImport): Promise<{ conversationId: string; imported: number }> {
+    const sessionName = payload.sessionName ?? 'tech_13309563469';
+    const account =
+      (await this.prisma.technicalAccount.findFirst({
+        where: { sessionName },
+      })) ??
+      (await this.prisma.technicalAccount.create({
+        data: {
+          title: sessionName,
+          sessionName,
+          status: 'active',
+          mode: 'reply_only',
+        },
+      }));
+
+    const lead = await this.prisma.lead.upsert({
+      where: { telegramUserId: BigInt(payload.peerTelegramUserId) },
+      create: {
+        telegramUserId: BigInt(payload.peerTelegramUserId),
+        username: payload.username,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        source: 'telegram_dm',
+        tags: [],
+      },
+      update: {
+        username: payload.username,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+      },
+    });
+
+    let conversation = await this.prisma.conversation.findUnique({
+      where: {
+        leadId_technicalAccountId: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+          externalChatId: resolveTelegramPeerId(payload.externalChatId, lead.telegramUserId),
+          state: 'new',
+          firstContactType: 'none',
+        },
+      });
+    }
+
+    let imported = 0;
+    let lastInboundAt = conversation.lastInboundAt;
+    let lastOutboundAt = conversation.lastOutboundAt;
+    let unreadDelta = 0;
+
+    const sorted = [...payload.messages].sort(
+      (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime(),
+    );
+
+    for (const item of sorted) {
+      const exists = await this.prisma.message.findFirst({
+        where: {
+          conversationId: conversation.id,
+          telegramMessageId: item.telegramMessageId,
+        },
+      });
+      if (exists) continue;
+
+      const sentAt = new Date(item.sentAt);
+      await this.prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          direction: item.direction,
+          senderType: item.direction === 'inbound' ? 'lead' : 'technical_account',
+          senderId: item.direction === 'inbound' ? lead.id : account.id,
+          body: item.body,
+          normalizedBody: normalizeBody(item.body),
+          telegramMessageId: item.telegramMessageId,
+          deliveryStatus: 'received',
+          createdAt: sentAt,
+        },
+      });
+      imported += 1;
+
+      if (item.direction === 'inbound') {
+        lastInboundAt = sentAt;
+        unreadDelta += 1;
+      } else {
+        lastOutboundAt = sentAt;
+      }
+    }
+
+    if (imported === 0) {
+      return { conversationId: conversation.id, imported: 0 };
+    }
+
+    const updated = await this.prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        externalChatId: resolveTelegramPeerId(payload.externalChatId, lead.telegramUserId),
+        lastInboundAt: lastInboundAt ?? conversation.lastInboundAt,
+        lastOutboundAt: lastOutboundAt ?? conversation.lastOutboundAt,
+        unreadCount: { increment: unreadDelta },
+        state: conversation.state === 'closed' ? 'active' : conversation.state === 'new' ? 'active' : conversation.state,
+      },
+      include: { lead: true, technicalAccount: true, assignedOperator: true },
+    });
+
+    this.realtime.emitConversationUpdated(updated);
+    return { conversationId: conversation.id, imported };
+  }
+
+  async handleInbound(event: InboundEvent): Promise<void> {
+    const account = await this.prisma.technicalAccount.findFirst({
+      where: { status: { in: ['active', 'limited'] } },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (!account) return;
+
+    const lead = await this.prisma.lead.upsert({
+      where: { telegramUserId: BigInt(event.senderTelegramUserId) },
+      create: {
+        telegramUserId: BigInt(event.senderTelegramUserId),
+        username: event.senderUsername,
+        firstName: event.senderFirstName,
+        lastName: event.senderLastName,
+        source: 'telegram_dm',
+        activatedAt: event.receivedAt,
+        tags: [],
+      },
+      update: {
+        username: event.senderUsername,
+        firstName: event.senderFirstName,
+        lastName: event.senderLastName,
+      },
+    });
+
+    let conversation = await this.prisma.conversation.findUnique({
+      where: {
+        leadId_technicalAccountId: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+          externalChatId: resolveTelegramPeerId(event.externalChatId, lead.telegramUserId),
+          state: 'new',
+          firstContactType: 'none',
+        },
+      });
+    }
+
+    const message = await this.prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        direction: 'inbound',
+        senderType: 'lead',
+        senderId: lead.id,
+        body: event.body,
+        normalizedBody: normalizeBody(event.body),
+        telegramMessageId: event.telegramMessageId,
+        deliveryStatus: 'received',
+      },
+    });
+
+    const updated = await this.prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        externalChatId: resolveTelegramPeerId(event.externalChatId, lead.telegramUserId),
+        lastInboundAt: event.receivedAt,
+        unreadCount: { increment: 1 },
+        state: conversation.state === 'closed' ? 'active' : conversation.state,
+      },
+      include: { lead: true, technicalAccount: true, assignedOperator: true },
+    });
+
+    await this.riskControl.onHealthyReplyExchange(account.id);
+    this.realtime.emitConversationUpdated(updated);
+    this.realtime.emitMessageCreated(conversation.id, message);
+  }
+
+  async listConversations(filter?: {
+    state?: string;
+    search?: string;
+    stopListed?: boolean;
+  }) {
+    const where: Record<string, unknown> = {};
+    if (filter?.state) where.state = filter.state;
+    if (filter?.stopListed !== undefined) where.isStopListed = filter.stopListed;
+    if (filter?.search) {
+      where.OR = [
+        { lead: { username: { contains: filter.search, mode: 'insensitive' } } },
+        { lead: { firstName: { contains: filter.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    return this.prisma.conversation.findMany({
+      where,
+      include: {
+        lead: true,
+        technicalAccount: true,
+        assignedOperator: true,
+      },
+      orderBy: [{ lastInboundAt: 'desc' }, { updatedAt: 'desc' }],
+    });
+  }
+
+  async getConversation(id: string) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id },
+      include: {
+        lead: true,
+        technicalAccount: true,
+        assignedOperator: true,
+        messages: { orderBy: { createdAt: 'asc' }, take: 200 },
+      },
+    });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+    return conversation;
+  }
+
+  async assignOperator(conversationId: string, operatorId: string) {
+    return this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { assignedOperatorId: operatorId, state: 'active' },
+      include: { lead: true, assignedOperator: true },
+    });
+  }
+
+  async markRead(conversationId: string) {
+    return this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { unreadCount: 0 },
+    });
+  }
+
+  async addInternalNote(conversationId: string, operatorId: string, body: string) {
+    return this.prisma.message.create({
+      data: {
+        conversationId,
+        direction: 'internal_note',
+        senderType: 'operator',
+        senderId: operatorId,
+        body,
+        normalizedBody: normalizeBody(body),
+        deliveryStatus: 'received',
+      },
+    });
+  }
+
+  async addToStopList(conversationId: string, reason: string) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    await this.prisma.stopListEntry.upsert({
+      where: { leadId: conversation.leadId },
+      create: {
+        leadId: conversation.leadId,
+        reason,
+        source: 'manual',
+      },
+      update: { reason },
+    });
+
+    return this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { isStopListed: true, state: 'closed' },
+    });
+  }
+}
