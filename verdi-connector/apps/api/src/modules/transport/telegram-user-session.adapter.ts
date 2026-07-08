@@ -414,6 +414,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
     conversationExternalId: string,
     text: string,
     sessionName?: string,
+    username?: string,
   ): Promise<SendMessageResult> {
     if (this.useStub()) {
       return this.sendMessageStub(conversationExternalId, text);
@@ -432,6 +433,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
           reqId,
           peerId: conversationExternalId,
           text,
+          ...(username ? { username: username.replace(/^@/, '') } : {}),
         });
       } catch (error) {
         clearTimeout(timer);

@@ -43,6 +43,7 @@ export class OutboxProcessor {
         externalChatId,
         outbox.body,
         outbox.conversation.technicalAccount.sessionName ?? undefined,
+        outbox.conversation.lead.username ?? undefined,
       );
       const message = await this.prisma.message.create({
         data: {

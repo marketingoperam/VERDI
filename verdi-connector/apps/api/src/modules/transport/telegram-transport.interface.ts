@@ -33,7 +33,12 @@ export interface TelegramTransport {
   disconnect(): Promise<void>;
   fetchDialogs(): Promise<TelegramDialog[]>;
   fetchMessages(conversationExternalId: string, limit?: number): Promise<TelegramInboundMessage[]>;
-  sendMessage(conversationExternalId: string, text: string, sessionName?: string): Promise<SendMessageResult>;
+  sendMessage(
+    conversationExternalId: string,
+    text: string,
+    sessionName?: string,
+    username?: string,
+  ): Promise<SendMessageResult>;
   markRead(conversationExternalId: string): Promise<void>;
   getAccountState(): Promise<TelegramAccountState>;
 }

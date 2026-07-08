@@ -1,7 +1,7 @@
 """Long-lived Telethon worker for VERDI Connector (Render / local).
 
 Protocol (newline-delimited JSON):
-  stdin  -> {"cmd":"send","reqId":"...","peerId":"123","text":"..."}
+  stdin  -> {"cmd":"send","reqId":"...","peerId":"123","username":"user","text":"..."}
            {"cmd":"sync","reqId":"...","limitDialogs":30,"limitMessages":40}
   stdout <- {"type":"ready","session":"...","meId":"...","username":"..."}
            {"type":"inbound", ...}
@@ -101,14 +101,39 @@ def prepare_session_file(session: str, sessions_dir: Path, *, force_rewrite: boo
     return resolve_session_path(session, sessions_dir)
 
 
+async def resolve_send_entity(client: TelegramClient, req: dict):
+    """Resolve peer for send: prefer cached peerId, fall back to username.
+
+    Seeded/imported dialogs may only have a numeric id that Telethon has never
+    seen in this session cache — get_entity(peer_id) then fails with PeerUser.
+    Username resolves via Telegram API and caches the entity for later sends.
+    """
+    errors: list[str] = []
+    peer_raw = req.get("peerId")
+    username = str(req.get("username") or "").strip().lstrip("@")
+
+    if peer_raw is not None and str(peer_raw).strip():
+        try:
+            return await client.get_entity(int(str(peer_raw)))
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"peerId={peer_raw}: {exc}")
+
+    if username:
+        try:
+            return await client.get_entity(username)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"username=@{username}: {exc}")
+
+    raise RuntimeError("; ".join(errors) or "missing peerId/username")
+
+
 async def handle_send(client: TelegramClient, req: dict) -> None:
     req_id = req.get("reqId", "")
     try:
-        peer_id = int(str(req["peerId"]))
         text = str(req.get("text") or "").strip()
         if not text:
             raise RuntimeError("empty text")
-        entity = await client.get_entity(peer_id)
+        entity = await resolve_send_entity(client, req)
         msg = await client.send_message(entity, text)
         sent_at = msg.date
         if sent_at.tzinfo is None:
