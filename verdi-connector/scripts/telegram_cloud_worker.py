@@ -23,6 +23,7 @@ from datetime import timezone
 from pathlib import Path
 
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 from telethon.tl.types import User
 
 
@@ -226,6 +227,37 @@ async def stdin_loop(client: TelegramClient, session_name: str, me_id: int, queu
             log("warn", f"unknown cmd: {cmd}")
 
 
+def _session_string_for(session: str) -> str:
+    specific = os.environ.get(f"TELEGRAM_SESSION_STRING_{session}") or ""
+    if specific.strip():
+        return specific.strip()
+    return (os.environ.get("TELEGRAM_SESSION_STRING") or "").strip()
+
+
+async def connect_client(session: str, sessions_dir: Path, api_id: int, api_hash: str) -> TelegramClient:
+    session_string = _session_string_for(session)
+    if session_string:
+        log("info", f"Using StringSession for {session}")
+        client = TelegramClient(StringSession(session_string), api_id, api_hash)
+        await client.connect()
+        if not await client.is_user_authorized():
+            raise RuntimeError(f"StringSession for {session} is not authorized")
+        return client
+
+    session_base = prepare_session_file(session, sessions_dir)
+    client = TelegramClient(str(session_base), api_id, api_hash)
+    await client.connect()
+    if not await client.is_user_authorized():
+        await client.disconnect()
+        log("warn", f"Session {session} unauthorized — reinstalling from env B64")
+        session_base = prepare_session_file(session, sessions_dir, force_rewrite=True)
+        client = TelegramClient(str(session_base), api_id, api_hash)
+        await client.connect()
+        if not await client.is_user_authorized():
+            raise RuntimeError(f"Session {session} is not authorized")
+    return client
+
+
 async def main_async(args: argparse.Namespace) -> None:
     api_id = int(os.environ.get("TELEGRAM_API_ID") or args.api_id or "0")
     api_hash = os.environ.get("TELEGRAM_API_HASH") or args.api_hash or ""
@@ -239,17 +271,7 @@ async def main_async(args: argparse.Namespace) -> None:
     if not api_id or not api_hash:
         raise RuntimeError("TELEGRAM_API_ID / TELEGRAM_API_HASH required")
 
-    session_base = prepare_session_file(session, sessions_dir)
-    client = TelegramClient(str(session_base), api_id, api_hash)
-    await client.connect()
-    if not await client.is_user_authorized():
-        await client.disconnect()
-        log("warn", f"Session {session} unauthorized — reinstalling from env B64")
-        session_base = prepare_session_file(session, sessions_dir, force_rewrite=True)
-        client = TelegramClient(str(session_base), api_id, api_hash)
-        await client.connect()
-        if not await client.is_user_authorized():
-            raise RuntimeError(f"Session {session} is not authorized")
+    client = await connect_client(session, sessions_dir, api_id, api_hash)
 
     me = await client.get_me()
     me_id = int(me.id)

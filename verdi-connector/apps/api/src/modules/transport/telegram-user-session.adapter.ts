@@ -146,6 +146,10 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
     return dir;
   }
 
+  private sessionStringEnvKey(session: string): string {
+    return `TELEGRAM_SESSION_STRING_${session.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  }
+
   private sessionB64EnvKey(session: string): string {
     return `TELEGRAM_SESSION_B64_${session.replace(/[^a-zA-Z0-9]/g, '_')}`;
   }
@@ -178,6 +182,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       (session === this.config.get<string>('TELEGRAM_SESSION', 'listener_main')
         ? this.config.get<string>('TELEGRAM_SESSION_B64', '')
         : '');
+    const sessionString = this.config.get<string>(this.sessionStringEnvKey(session), '');
 
     this.logger.log(`Starting Telegram worker session=${session}`);
 
@@ -196,6 +201,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
           TELEGRAM_SESSION: session,
           TELEGRAM_SESSIONS_DIR: sessionsDir,
           ...(b64 ? { TELEGRAM_SESSION_B64: b64 } : {}),
+          ...(sessionString ? { TELEGRAM_SESSION_STRING: sessionString } : {}),
         },
       },
     );

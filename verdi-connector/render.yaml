@@ -68,6 +68,8 @@ services:
         value: admin123
       - key: SEED_OPERATOR_NAME
         value: "@andf1n"
+      - key: INVITE_SYNC_SECRET
+        sync: false
 
   - type: web
     name: verdi-connector-web

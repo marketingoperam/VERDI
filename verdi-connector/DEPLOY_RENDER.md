@@ -5,6 +5,35 @@ API: `https://verdi-connector-api.onrender.com`
 
 Логин: `andf1n@verdi.local` / `admin123`
 
+## Инвайтинг → Inbox (холодная отписка)
+
+После отписки из панели `инвайтинг` диалог появляется в [Operator Inbox](https://verdi-connector-web.onrender.com/inbox) с синей точкой (`state=new`).
+
+### Env
+
+| Сервис | Key | Value |
+|--------|-----|--------|
+| **verdi-connector-api** | `INVITE_SYNC_SECRET` | один длинный секрет |
+| **инвайтинг `.env`** | `INV_CONNECTOR_API_URL` | `https://verdi-connector-api.onrender.com` |
+| **инвайтинг `.env`** | `INV_CONNECTOR_SYNC_SECRET` | тот же секрет |
+
+### Ответы из Inbox (outreach-аккаунты)
+
+Чтобы отвечать из Inbox и получать входящие на outreach-аккаунте:
+
+1. Экспорт сессии из инвайтинга:
+   ```powershell
+   cd инвайтинг
+   .\.venv\Scripts\python.exe scripts\export_session_b64.py outreach1
+   ```
+2. На Render API: `TELEGRAM_SESSION_STRING_outreach1` = содержимое `.telegram-sessions/outreach1.string.txt`
+3. Добавить `outreach1` в `TELEGRAM_SESSIONS` (через запятую)
+4. **Не запускать тот же outreach локально и на Render одновременно** (AuthKeyDuplicated)
+
+### Ручная догрузка уже отписанного
+
+`POST http://127.0.0.1:8010/api/v1/targets/{id}/sync-inbox`
+
 ## Telegram в облаке (@andf1n)
 
 На API крутится Telethon-воркер с сессией `listener_main` (аккаунт `@andf1n`).

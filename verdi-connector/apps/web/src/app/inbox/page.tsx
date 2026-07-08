@@ -43,6 +43,10 @@ type TechAccount = {
   riskScore: number;
 };
 
+function isNewChat(c: Conversation): boolean {
+  return c.state === 'new' || c.unreadCount > 0;
+}
+
 function leadLabel(c: Conversation): string {
   if (c.lead.username) return `@${c.lead.username}`;
   if (c.lead.firstName) return c.lead.firstName;
@@ -222,8 +226,9 @@ export default function InboxPage() {
                 className={`item ${selectedId === c.id ? 'active' : ''}`}
                 onClick={() => void openConversation(c.id)}
               >
+                {isNewChat(c) && <span className="item-new-dot" aria-label="Новый диалог" />}
                 <strong>{leadLabel(c)}</strong>
-                <span>{c.technicalAccount.title} · {c.state} · unread {c.unreadCount}</span>
+                <span>{c.technicalAccount.title} · {c.state}{c.unreadCount > 0 ? ` · unread ${c.unreadCount}` : ''}</span>
                 {c.isStopListed && <em>stop-list</em>}
               </button>
             ))

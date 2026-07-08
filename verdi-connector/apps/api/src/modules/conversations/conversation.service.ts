@@ -139,6 +139,16 @@ export class ConversationService {
       return { conversationId: conversation.id, imported: 0 };
     }
 
+    const hasInbound = sorted.some((m) => m.direction === 'inbound');
+    const nextState =
+      conversation.state === 'closed'
+        ? 'active'
+        : hasInbound
+          ? 'active'
+          : conversation.state === 'new'
+            ? 'new'
+            : conversation.state;
+
     const updated = await this.prisma.conversation.update({
       where: { id: conversation.id },
       data: {
@@ -146,7 +156,8 @@ export class ConversationService {
         lastInboundAt: lastInboundAt ?? conversation.lastInboundAt,
         lastOutboundAt: lastOutboundAt ?? conversation.lastOutboundAt,
         unreadCount: { increment: unreadDelta },
-        state: conversation.state === 'closed' ? 'active' : conversation.state === 'new' ? 'active' : conversation.state,
+        state: nextState,
+        firstContactType: hasInbound ? conversation.firstContactType : 'automation',
       },
       include: { lead: true, technicalAccount: true, assignedOperator: true },
     });
@@ -297,7 +308,7 @@ export class ConversationService {
         technicalAccount: true,
         assignedOperator: true,
       },
-      orderBy: [{ lastInboundAt: 'desc' }, { updatedAt: 'desc' }],
+      orderBy: [{ lastInboundAt: 'desc' }, { lastOutboundAt: 'desc' }, { updatedAt: 'desc' }],
     });
 
     // Client inbox only — hide Saved Messages / self chat / service chats / tech accounts.
@@ -336,10 +347,21 @@ export class ConversationService {
   }
 
   async markRead(conversationId: string) {
-    return this.prisma.conversation.update({
+    const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
-      data: { unreadCount: 0 },
     });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    const updated = await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        unreadCount: 0,
+        state: conversation.state === 'new' ? 'active' : conversation.state,
+      },
+      include: { lead: true, technicalAccount: true, assignedOperator: true },
+    });
+    this.realtime.emitConversationUpdated(updated);
+    return updated;
   }
 
   async addInternalNote(conversationId: string, operatorId: string, body: string) {
