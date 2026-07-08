@@ -49,16 +49,16 @@ export class BootstrapService implements OnModuleInit {
             : sessionName;
       const phoneMasked =
         sessionName === 'listener_main' ? 'andf1n' : sessionName;
-      const telegramUserId =
-        sessionName === 'listener_main'
-          ? BigInt('8228313419')
-          : sessionName === 'tech_1'
-            ? BigInt('8725112351')
-            : sessionName === 'tech_2'
-              ? BigInt('8306772966')
-              : sessionName === 'tech_3'
-                ? BigInt('8518514932')
-                : undefined;
+      const knownIds: Record<string, string> = {
+        listener_main: '8228313419',
+        tech_1: '8725112351',
+        tech_2: '8306772966',
+        tech_3: '8518514932',
+        tech_4: '8796247821',
+        tech_5: '8778620130',
+        tech_6: '8706934296',
+      };
+      const telegramUserId = knownIds[sessionName] ? BigInt(knownIds[sessionName]) : undefined;
 
       const existing = await this.prisma.technicalAccount.findFirst({
         where: { sessionName },

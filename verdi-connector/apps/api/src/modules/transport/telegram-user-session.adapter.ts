@@ -228,11 +228,13 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       this.rejectAllPending(runtime, new Error(`Telegram worker disconnected (${session})`));
       this.workers.delete(session);
       this.connected = [...this.workers.values()].some((w) => w.connected);
-      // Do not endlessly restart clearly unauthorized sessions.
-      const unauthorized =
-        typeof runtime.lastFatal === 'string' &&
-        runtime.lastFatal.toLowerCase().includes('not authorized');
-      if (!this.shuttingDown && !unauthorized) {
+      // Do not endlessly restart dead/auth-conflict sessions.
+      const fatal = (runtime.lastFatal ?? '').toLowerCase();
+      const permanentFail =
+        fatal.includes('not authorized') ||
+        fatal.includes('authkeyduplicated') ||
+        fatal.includes('two different ip');
+      if (!this.shuttingDown && !permanentFail) {
         const delay = runtime.restartDelayMs;
         runtime.restartDelayMs = Math.min(runtime.restartDelayMs * 2, 60000);
         runtime.restartTimer = setTimeout(() => {
@@ -240,8 +242,8 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
             this.logger.error(`[${session}] restart failed: ${(e as Error).message}`),
           );
         }, delay);
-      } else if (unauthorized) {
-        this.logger.warn(`[${session}] not authorized — stop restart loop`);
+      } else if (permanentFail) {
+        this.logger.warn(`[${session}] permanent auth failure — stop restart loop`);
       }
     });
 
