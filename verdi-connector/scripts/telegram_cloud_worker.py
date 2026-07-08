@@ -54,19 +54,25 @@ def resolve_session_path(session: str, sessions_dir: Path) -> Path:
 
 
 def prepare_session_file(session: str, sessions_dir: Path) -> Path:
-    """Materialize Telethon SQLite session (needs a writable path)."""
+    """Materialize Telethon SQLite session (needs a writable path).
+
+    Important: never overwrite an existing writable session on every restart —
+    Telethon updates the SQLite file after connect; rewriting stale B64 races
+    and can raise 'too many values to unpack'.
+    """
     import base64
 
     sessions_dir.mkdir(parents=True, exist_ok=True)
     dest = sessions_dir / f"{session}.session"
 
+    if dest.is_file() and dest.stat().st_size > 0:
+        log("info", f"Using existing session file {dest}")
+        return sessions_dir / session
+
     b64 = (os.environ.get("TELEGRAM_SESSION_B64") or "").strip()
     if b64:
         dest.write_bytes(base64.b64decode(b64))
         log("info", f"Wrote session from TELEGRAM_SESSION_B64 -> {dest}")
-        return sessions_dir / session
-
-    if dest.is_file():
         return sessions_dir / session
 
     secret_candidates = [
@@ -249,6 +255,8 @@ async def main_async(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    import traceback
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--session", default="listener_main")
     parser.add_argument("--api-id", default="")
@@ -258,8 +266,9 @@ def main() -> None:
     try:
         asyncio.run(main_async(args))
     except Exception as exc:  # noqa: BLE001
-        emit({"type": "fatal", "error": str(exc)})
-        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        tb = traceback.format_exc()
+        emit({"type": "fatal", "error": str(exc), "traceback": tb[-1500:]})
+        print(json.dumps({"error": str(exc), "traceback": tb[-1500:]}), file=sys.stderr)
         sys.exit(1)
 
 

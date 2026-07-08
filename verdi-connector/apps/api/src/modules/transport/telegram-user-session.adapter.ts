@@ -36,6 +36,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
   private readonly logger = new Logger(TelegramUserSessionAdapter.name);
   private connected = false;
   private worker: ChildProcessWithoutNullStreams | null = null;
+  private starting: Promise<void> | null = null;
   private stdoutBuffer = '';
   private readonly pendingSends = new Map<string, Pending>();
   private readonly pendingSyncs = new Map<string, SyncPending>();
@@ -43,6 +44,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
   private meUsername?: string;
   private restartTimer: NodeJS.Timeout | null = null;
   private shuttingDown = false;
+  private restartDelayMs = 5000;
   private readonly dialogs = new Map<string, TelegramDialog>();
   private readonly messages = new Map<string, TelegramInboundMessage[]>();
 
@@ -140,6 +142,19 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
 
   private async startWorker(): Promise<void> {
     if (this.worker) return;
+    if (this.starting) {
+      await this.starting;
+      return;
+    }
+
+    this.starting = this.spawnWorker().finally(() => {
+      this.starting = null;
+    });
+    await this.starting;
+  }
+
+  private async spawnWorker(): Promise<void> {
+    if (this.worker) return;
 
     const script = this.resolveScriptPath();
     const session = this.sessionName();
@@ -172,7 +187,7 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
     child.stdout.on('data', (chunk: Buffer) => this.onStdout(chunk.toString('utf8')));
     child.stderr.on('data', (chunk: Buffer) => {
       const text = chunk.toString('utf8').trim();
-      if (text) this.logger.warn(`Telegram worker stderr: ${text}`);
+      if (text) this.logger.warn(`Telegram worker stderr: ${text.slice(0, 2000)}`);
     });
     child.on('error', (err) => {
       this.logger.error(`Telegram worker spawn error: ${err.message}`);
@@ -184,24 +199,27 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       this.connected = false;
       this.rejectAllPending(new Error('Telegram worker disconnected'));
       if (!this.shuttingDown) {
+        const delay = this.restartDelayMs;
+        this.restartDelayMs = Math.min(this.restartDelayMs * 2, 60000);
         this.restartTimer = setTimeout(() => {
           void this.startWorker().catch((e) =>
             this.logger.error(`Telegram worker restart failed: ${(e as Error).message}`),
           );
-        }, 5000);
+        }, delay);
       }
     });
 
     // Wait briefly for ready event (non-blocking overall — inbound can arrive later)
     await new Promise<void>((resolve) => {
       const onReady = () => {
+        this.restartDelayMs = 5000;
         clearTimeout(timer);
         resolve();
       };
       const timer = setTimeout(() => {
         this.off('worker-ready', onReady);
         resolve();
-      }, 15000);
+      }, 20000);
       this.once('worker-ready', onReady);
     });
   }
