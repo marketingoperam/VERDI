@@ -1,0 +1,60 @@
+# Render Blueprint: VERDI Operator Inbox
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: verdi-connector-db
+    plan: free
+    databaseName: verdi_connector
+    user: verdi
+
+services:
+  - type: web
+    name: verdi-connector-api
+    runtime: node
+    plan: free
+    rootDir: Клонер чатов/verdi-connector/apps/api
+    buildCommand: npm install --include=dev && sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma && npx prisma generate && npm run build
+    startCommand: npx prisma db push && node dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USE_SYNC_OUTBOX
+        value: "true"
+      - key: REPLY_ONLY
+        value: "true"
+      - key: TELEGRAM_USE_STUB
+        value: "true"
+      - key: TELEGRAM_SYNC_ON_START
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_ENCRYPTION_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: verdi-connector-db
+          property: connectionString
+      - key: CORS_ORIGIN
+        sync: false
+      - key: SEED_OPERATOR_EMAIL
+        value: andf1n@verdi.local
+      - key: SEED_OPERATOR_PASSWORD
+        value: admin123
+      - key: SEED_OPERATOR_NAME
+        value: "@andf1n"
+
+  - type: web
+    name: verdi-connector-web
+    runtime: node
+    plan: free
+    rootDir: Клонер чатов/verdi-connector/apps/web
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npx next start -H 0.0.0.0 -p $PORT
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_WS_URL
+        sync: false
