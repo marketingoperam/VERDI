@@ -1,16 +1,18 @@
 # Инвайтинг
 
-Сервис для приглашения пользователей в Telegram-чаты по ссылке с лимитами и панелью управления.
+Сервис для приглашения пользователей в Telegram-чаты и холодной отписки (outreach) с веб-панелью и синхронизацией диалогов в **VERDI Operator Inbox**.
 
 ## Что умеет
 
-- Управление через веб‑панель: ссылка на чат, пауза между инвайтами, лимит в день, загрузка базы.
-- Приглашение выполняют **5 Telegram‑аккаунтов** (Telethon `.session`), по кругу.
-- SQLite‑база: очередь пользователей, статусы, журнал попыток.
+- **Инвайт** — добавление пользователей в канал/чат по `@username`.
+- **Отписка (outreach)** — первое сообщение только тем, кого уже пригласили.
+- **Два пула аккаунтов:** `inviter` (инвайт) и `outreach` (отписка), ротация при flood (`peer_flood`, `Too many requests`).
+- **Авторизация через панель:** телефон → код → 2FA; сессии хранятся как StringSession в SQLite (не `.session` файлы).
+- **Синк в инбокс:** после успешной отписки чат появляется на Render в Operator Inbox.
 
 ## Быстрый старт (Windows)
 
-1) Установите зависимости:
+1. Зависимости:
 
 ```bash
 python -m venv .venv
@@ -18,47 +20,75 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-2) Положите 5 сессий Telethon в `инвайтинг\sessions\`:
-
-- `inviter_01.session`
-- `inviter_02.session`
-- `inviter_03.session`
-- `inviter_04.session`
-- `inviter_05.session`
-
-3) Создайте `.env` рядом с `start.bat` (или используйте переменные окружения):
+2. Конфиг — скопируйте `.env.example` → `.env` и заполните:
 
 ```env
 INV_APP_HOST=127.0.0.1
-INV_APP_PORT=8010
+INV_APP_PORT=8011
 INV_DATABASE_URL=sqlite+aiosqlite:///./inviting.sqlite
 
-# общий API (my.telegram.org)
 INV_TG_API_ID=123456
-INV_TG_API_HASH=abcdef0123456789abcdef0123456789
+INV_TG_API_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# папка с .session
-INV_SESSIONS_DIR=./sessions
+# Синхронизация с Operator Inbox (Render)
+INV_CONNECTOR_API_URL=https://verdi-connector-api.onrender.com
+INV_CONNECTOR_SYNC_SECRET=your-long-random-secret
 ```
 
-4) Запуск:
+3. Запуск: двойной клик `start.bat` → **http://127.0.0.1:8011**
 
-- Двойной клик `start.bat`
-- Откройте `http://127.0.0.1:8010`
+4. Вкладка **Аккаунты** — добавьте inviter- и outreach-аккаунты (роль выбирается при создании).
 
-## Формат базы для приглашений
+## Формат базы
 
-Загрузка CSV в панели.
+CSV в панели. Колонка `username` (обязательно для резолва в Telegram):
 
-Поддерживаемые колонки (любая из):
+- `someuser` или `@someuser`
 
-- `username` (например `someuser` или `@someuser`)
-- `user_id` (число)
+## Лимиты и ротация
 
-Можно смешивать.
+- **Инвайт:** настраивается в панели (пауза, лимит в день); при flood переключается на следующий inviter.
+- **Отписка:** до **20 DM в день на каждый outreach-аккаунт**; при `peer_flood` — ротация на следующий outreach.
+
+## Синхронизация с Operator Inbox
+
+После успешной отписки сервис вызывает `POST /api/integrations/inviting/outreach` на API коннектора.
+
+- `INV_CONNECTOR_SYNC_SECRET` = `INVITE_SYNC_SECRET` на Render.
+- Ручной импорт старого чата: `scripts/import_chat_to_inbox.py`
+- Экспорт StringSession для Render: `scripts/export_session_b64.py`
+
+Инбокс: https://verdi-connector-web.onrender.com/inbox
+
+## Структура
+
+```
+инвайтинг/
+├── app/
+│   ├── api/routes.py          # REST + панель
+│   ├── services/
+│   │   ├── inviter.py         # цикл инвайта
+│   │   ├── outreach.py        # цикл отписки
+│   │   └── connector_sync.py  # POST в инбокс
+│   └── telegram/
+│       ├── auth_service.py    # phone → code → 2FA
+│       └── session_pool.py    # StringSession из БД
+├── scripts/
+├── .env.example
+└── start.bat
+```
 
 ## Важно
 
-- Чтобы приглашать людей, аккаунты‑инвайтеры должны иметь права добавления участников в целевом чате/канале.
-- По ссылке‑инвайту сервис сначала присоединит инвайтер‑аккаунты к чату, затем будет добавлять пользователей.
+- Инвайтеры должны иметь право добавлять участников в целевой чат/канал.
+- По invite-ссылке сервис сначала вступит аккаунтами в чат, затем начнёт инвайт.
+- `.env`, `inviting.sqlite` и сессии **не в git** — на новой машине авторизуйте аккаунты заново.
+- Не используйте одну сессию одновременно локально и на Render.
 
+## Мобильный Cursor
+
+Код в GitHub: https://github.com/marketingoperam/VERDI — папка `инвайтинг/`.
+
+С телефона можно править код через Cursor; сам сервис нужно запускать на ПК или VPS. Инбокс для ответов клиентам доступен в браузере на телефоне.
+
+См. также: [Клонер чатов/README.md](../Клонер%20чатов/README.md)

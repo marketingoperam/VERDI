@@ -78,12 +78,6 @@ def _is_invite_flood_message(msg: str) -> bool:
     )
 
 
-def _day_bounds(day: date) -> tuple[datetime, datetime]:
-    start = datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc)
-    end = datetime.combine(day, datetime.max.time(), tzinfo=timezone.utc)
-    return start.replace(tzinfo=None), end.replace(tzinfo=None)
-
-
 @dataclass
 class InviteRuntimeState:
     running: bool = False
