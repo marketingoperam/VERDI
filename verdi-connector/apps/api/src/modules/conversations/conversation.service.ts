@@ -13,6 +13,7 @@ export interface InboundEvent {
   senderLastName?: string;
   body: string;
   receivedAt: Date;
+  sessionName?: string;
 }
 
 export interface TelegramDialogImport {
@@ -155,10 +156,23 @@ export class ConversationService {
   }
 
   async handleInbound(event: InboundEvent): Promise<void> {
-    const account = await this.prisma.technicalAccount.findFirst({
-      where: { status: { in: ['active', 'limited'] } },
-      orderBy: { createdAt: 'asc' },
-    });
+    const sessionName = event.sessionName;
+    const account = sessionName
+      ? ((await this.prisma.technicalAccount.findFirst({
+          where: { sessionName, status: { in: ['active', 'limited'] } },
+        })) ??
+        (await this.prisma.technicalAccount.create({
+          data: {
+            title: sessionName === 'listener_main' ? '@andf1n' : sessionName,
+            sessionName,
+            status: 'active',
+            mode: 'reply_only',
+          },
+        })))
+      : await this.prisma.technicalAccount.findFirst({
+          where: { status: { in: ['active', 'limited'] } },
+          orderBy: { createdAt: 'asc' },
+        });
     if (!account) return;
 
     const lead = await this.prisma.lead.upsert({
@@ -200,6 +214,14 @@ export class ConversationService {
       });
     }
 
+    const existing = await this.prisma.message.findFirst({
+      where: {
+        conversationId: conversation.id,
+        telegramMessageId: event.telegramMessageId,
+      },
+    });
+    if (existing) return;
+
     const message = await this.prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -210,6 +232,7 @@ export class ConversationService {
         normalizedBody: normalizeBody(event.body),
         telegramMessageId: event.telegramMessageId,
         deliveryStatus: 'received',
+        createdAt: event.receivedAt,
       },
     });
 

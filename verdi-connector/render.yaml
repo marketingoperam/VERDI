@@ -1,7 +1,8 @@
 # Render Blueprint: VERDI Operator Inbox
-# Docs: https://render.com/docs/blueprint-spec
-# Path in repo (Latin only — required by Render RootDir):
-#   verdi-connector/render.yaml
+# Path: verdi-connector/render.yaml
+#
+# After first deploy, set TELEGRAM_API_HASH + TELEGRAM_SESSION_B64 in the
+# Render dashboard (see DEPLOY_RENDER.md). Do not commit session files.
 
 databases:
   - name: verdi-connector-db
@@ -12,11 +13,11 @@ databases:
 services:
   - type: web
     name: verdi-connector-api
-    runtime: node
+    runtime: docker
     plan: free
-    rootDir: verdi-connector/apps/api
-    buildCommand: npm install --include=dev && sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma && npx prisma generate && npm run build
-    startCommand: npx prisma db push && node dist/main.js
+    rootDir: verdi-connector
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -26,9 +27,23 @@ services:
       - key: REPLY_ONLY
         value: "true"
       - key: TELEGRAM_USE_STUB
-        value: "true"
-      - key: TELEGRAM_SYNC_ON_START
         value: "false"
+      - key: TELEGRAM_SYNC_ON_START
+        value: "true"
+      - key: TELEGRAM_SESSION
+        value: listener_main
+      - key: TELEGRAM_API_ID
+        value: "30268202"
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_SESSION_B64
+        sync: false
+      - key: TELEGRAM_PYTHON
+        value: python3
+      - key: TELEGRAM_WORKER_SCRIPT
+        value: /opt/verdi/scripts/telegram_cloud_worker.py
+      - key: TELEGRAM_SESSIONS_DIR
+        value: /var/data/telegram-sessions
       - key: JWT_SECRET
         generateValue: true
       - key: SESSION_ENCRYPTION_KEY

@@ -1,97 +1,63 @@
 # Деплой VERDI Operator Inbox на Render.com
 
-Панель будет доступна по ссылке вида `https://verdi-connector-web.onrender.com` постоянно (месяц+), пока сервис не удалите.
+Сайт: `https://verdi-connector-web.onrender.com`  
+API: `https://verdi-connector-api.onrender.com`
 
-## Важно перед стартом
+Логин: `andf1n@verdi.local` / `admin123`
 
-1. Код должен быть в GitHub (репозиторий `marketingoperam/VERDI` у вас уже есть).
-2. На **бесплатном** Render сервис может «засыпать» после ~15 минут бездействия — первый заход может подождать 30–60 сек. Для без «сна» нужен платный план (~$7/мес за web).
-3. **Отправка сообщений в Telegram с Render** пока не подключена (сессии Telethon лежат у вас на ПК). На Render будет работать: **логин, диалоги, UI**. Отправка «по-настоящему» — отдельный шаг позже (воркер на ПК или GramJS).
+## Telegram в облаке (@andf1n)
 
-## Шаги (мышка + копипаст)
+На API крутится Telethon-воркер с сессией `listener_main` (аккаунт `@andf1n`).
 
-### 1) Закоммитить `verdi-connector` в GitHub
+### Важно
 
-Если папка ещё не в репозитории — попросите Cursor/агента сделать commit+push, или вручную:
+1. **Не держите одну и ту же сессию одновременно на ПК и на Render.** Пока тестируете облако — остановите локальный ShadowChat / listener с `listener_main`, иначе Telegram может кикнуть сессию.
+2. Сессию **не коммитим** в GitHub. Только Secret / Env на Render.
 
-```bat
-cd C:\Users\Karim\Desktop\Verdi
-git add "Клонер чатов/verdi-connector"
-git commit -m "Add VERDI connector for Render deploy"
-git push origin main
-```
-
-### 2) Создать аккаунт на https://render.com
-
-Войти через GitHub.
-
-### 3) New → Blueprint
-
-1. **New** → **Blueprint**
-2. Подключить репозиторий **VERDI**
-3. Указать путь к файлу: `verdi-connector/render.yaml`  
-   (или оставить пустым, если в корне репозитория появится копия — сейчас файл лежит в `verdi-connector/`)
-
-### 4) После создания API — скопировать URL
-
-В дашборде Render откройте сервис **verdi-connector-api**.  
-Публичный URL будет примерно:
-
-`https://verdi-connector-api.onrender.com`
-
-### 5) Прописать CORS и ссылки API в Web
-
-В **verdi-connector-api** → Environment:
+### Env на verdi-connector-api
 
 | Key | Value |
 |-----|--------|
 | `CORS_ORIGIN` | `https://verdi-connector-web.onrender.com` |
+| `TELEGRAM_USE_STUB` | `false` |
+| `TELEGRAM_SESSION` | `listener_main` |
+| `TELEGRAM_API_ID` | `30268202` |
+| `TELEGRAM_API_HASH` | из ShadowChat `.env` (`LISTENER_API_HASH`) |
+| `TELEGRAM_SESSION_B64` | base64 файла `listener_main.session` (см. ниже) |
 
-(подставьте **точный** URL вашего web-сервиса)
+### Как получить TELEGRAM_SESSION_B64 (Windows PowerShell)
 
-В **verdi-connector-web** → Environment:
+```powershell
+[Convert]::ToBase64String(
+  [IO.File]::ReadAllBytes(
+    "C:\Users\Karim\Desktop\Verdi\Клонер чатов\shadowchat\sessions\listener_main.session"
+  )
+) | Set-Clipboard
+```
+
+Вставьте из буфера в Render → **verdi-connector-api** → Environment → `TELEGRAM_SESSION_B64` → Save → Manual Deploy.
+
+### Web env
 
 | Key | Value |
 |-----|--------|
 | `NEXT_PUBLIC_API_URL` | `https://verdi-connector-api.onrender.com` |
 | `NEXT_PUBLIC_WS_URL` | `https://verdi-connector-api.onrender.com` |
 
-Затем **Manual Deploy** → Clear build cache & deploy у **web**.
+## Первый деплой / обновление Blueprint
 
-### 6) Открыть
+1. Commit+push папки `verdi-connector/` (латиница) в GitHub.
+2. Render → Blueprint / Manual Deploy сервисов.
+3. Прописать env из таблиц выше (особенно `TELEGRAM_API_HASH` и `TELEGRAM_SESSION_B64`).
+4. Дождаться Deploy Live у API, открыть web, залогиниться.
+5. В логах API должно быть: `Telegram worker ready @andf1n`.
+6. Напишите себе в Telegram с другого аккаунта — диалог появится в inbox.
 
-Ссылка человеку: `https://verdi-connector-web.onrender.com`
+## Free tier
 
-Логин:
-- Email: `andf1n@verdi.local`
-- Password: `admin123`
+После ~15 мин бездействия сервис «засыпает». Пока оператор на сайте — обычно ок. Первый заход после сна: 30–60 сек.
 
-## Если Blueprint с кириллицей не сработал — руками
+## Свой домен (SprintHost)
 
-### Postgres
-**New** → **PostgreSQL** → Free → Create.
-
-### API (Web Service)
-- Root Directory: `verdi-connector/apps/api`
-- Build: `npm install --include=dev && sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma && npx prisma generate && npm run build`
-- Start: `npx prisma db push && node dist/main.js`
-- Env: `DATABASE_URL` = Internal Database URL из Postgres  
-  + `USE_SYNC_OUTBOX=true`, `TELEGRAM_USE_STUB=true`, `JWT_SECRET=...`, `CORS_ORIGIN=...`
-
-### Web (Web Service)
-- Root Directory: `verdi-connector/apps/web`
-- Build: `npm install --include=dev && npm run build`
-- Start: `npx next start -H 0.0.0.0 -p $PORT`
-- Env: `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_WS_URL` = URL API
-
-## Потом ваш домен (SprintHost)
-
-Когда web на Render заработает:
-1. В Render → web → **Custom Domain** → ваш домен.
-2. В SprintHost DNS: **CNAME** `www` (или как скажет Render) на `verdi-connector-web.onrender.com`.
-
-## Локальная разработка после перехода на Postgres
-
-Локально удобнее оставить SQLite (`file:./dev.db`).  
-Для этого временно в `apps/api/prisma/schema.prisma` верните `provider = "sqlite"`  
-или поднимите Postgres из `docker-compose.yml` и укажите `DATABASE_URL` как в compose.
+1. Render → web → Custom Domain.
+2. В SprintHost DNS: CNAME на `verdi-connector-web.onrender.com`.

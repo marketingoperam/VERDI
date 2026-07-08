@@ -40,11 +40,12 @@ export class BootstrapService implements OnModuleInit {
     }
 
     // Ensure technical account exists even if DB already has an operator.
+    const cloudSession = this.config.get<string>('TELEGRAM_SESSION', 'listener_main');
     const technicalAccounts = [
       {
-        title: 'tech_13309563469',
-        sessionName: 'tech_13309563469',
-        phoneMasked: '+1330***3469',
+        title: cloudSession === 'listener_main' ? '@andf1n' : cloudSession,
+        sessionName: cloudSession,
+        phoneMasked: cloudSession === 'listener_main' ? 'andf1n' : undefined,
         status: 'active' as const,
         mode: 'reply_only' as const,
       },

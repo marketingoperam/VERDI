@@ -9,6 +9,9 @@
 **/.env.local
 **/*.db
 **/*.db-journal
+**/.telegram-sessions/
+**/*.session
+**/*.session-journal
 
 # logs / caches
 **/*.log
