@@ -71,20 +71,37 @@ export class BootstrapService implements OnModuleInit {
       await this.prisma.technicalAccount.create({ data: acc });
     }
 
-    await this.prisma.template.createMany({
-      data: [
-        {
-          title: 'Приветствие',
-          category: 'onboarding',
-          body: 'Здравствуйте! Я на связи, чем могу помочь?',
-        },
-        {
-          title: 'Уточнение',
-          category: 'support',
-          body: 'Спасибо за сообщение, уточню детали и вернусь с ответом.',
-        },
-      ],
-      skipDuplicates: true,
-    });
+    const defaultTemplates = [
+      {
+        title: 'Приветствие',
+        category: 'onboarding',
+        body: 'Здравствуйте! Я на связи, чем могу помочь?',
+      },
+      {
+        title: 'Уточнение',
+        category: 'support',
+        body: 'Спасибо за сообщение, уточню детали и вернусь с ответом.',
+      },
+    ];
+
+    for (const template of defaultTemplates) {
+      const existing = await this.prisma.template.findFirst({
+        where: { title: template.title },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (!existing) {
+        await this.prisma.template.create({ data: template });
+        continue;
+      }
+      await this.prisma.template.update({
+        where: { id: existing.id },
+        data: { isActive: true, body: template.body, category: template.category },
+      });
+      // Soft-disable duplicate chips with the same title so the UI shows only two.
+      await this.prisma.template.updateMany({
+        where: { title: template.title, id: { not: existing.id } },
+        data: { isActive: false },
+      });
+    }
   }
 }

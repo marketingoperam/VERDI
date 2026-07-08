@@ -212,11 +212,14 @@ export default function InboxPage() {
             </div>
             <div className="composer">
               <div className="templates">
-                {templates.map((t) => (
-                  <button key={t.id} type="button" onClick={() => setDraft(t.body)}>
-                    {t.title}
-                  </button>
-                ))}
+                {templates
+                  .filter((t, idx, all) => all.findIndex((x) => x.title === t.title) === idx)
+                  .slice(0, 2)
+                  .map((t) => (
+                    <button key={t.id} type="button" onClick={() => setDraft(t.body)}>
+                      {t.title}
+                    </button>
+                  ))}
               </div>
               <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} />
               <div className="actions">

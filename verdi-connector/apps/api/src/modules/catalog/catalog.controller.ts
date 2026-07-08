@@ -11,7 +11,18 @@ export class TemplatesController {
 
   @Get()
   async list() {
-    return this.prisma.template.findMany({ where: { isActive: true } });
+    const rows = await this.prisma.template.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    // One chip per title (dedupe legacy seeded duplicates).
+    const seen = new Set<string>();
+    return rows.filter((row) => {
+      const key = row.title.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 }
 
