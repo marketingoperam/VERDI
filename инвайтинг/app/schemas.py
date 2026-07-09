@@ -6,7 +6,10 @@ from pydantic import BaseModel, Field
 
 
 class RuntimeSettings(BaseModel):
-    chat_link: str = Field(default="", description="Ссылка на чат/канал (t.me/...)")
+    chat_link: str = Field(
+        default="https://t.me/verdi114",
+        description="Ссылка на чат/канал (t.me/...)",
+    )
     min_delay_seconds: int = Field(default=45, ge=0, le=86400)
     daily_limit: int = Field(default=50, ge=0, le=100000)
 
@@ -16,7 +19,7 @@ class RuntimeSettings(BaseModel):
 
     outreach_enabled: bool = Field(default=False)
     outreach_message: str = Field(
-        default="Привет! Добавили вас в чат — напишите, если есть вопросы.",
+        default="Привет! Добавили вас в чат VERDI — напишите, если есть вопросы.",
         description="Текст холодной отписки после инвайта",
     )
     outreach_delay_seconds: int = Field(default=60, ge=0, le=86400)
@@ -105,3 +108,30 @@ class AuthVerifyCode(BaseModel):
 
 class AuthVerifyPassword(BaseModel):
     password: str
+
+
+class InvitedActivityItem(BaseModel):
+    id: int
+    username: str | None
+    user_id: int | None
+    is_invited: bool
+    invited_at: datetime | None
+    is_messaged: bool
+    messaged_at: datetime | None = None
+    message_count: int = 0
+    reaction_count: int = 0
+    total_count: int = 0
+    last_active_at: datetime | None = None
+    tech_session: str | None = None
+    has_activity: bool = False
+
+
+class InvitedActivityResponse(BaseModel):
+    shadowchat_reachable: bool
+    mirror_username: str | None = None
+    mirror_chat_id: int | None = None
+    invited_total: int
+    with_activity: int
+    messages_total: int
+    reactions_total: int
+    items: list[InvitedActivityItem]

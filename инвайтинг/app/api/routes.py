@@ -14,12 +14,14 @@ from app.schemas import (
     AuthSendCode,
     AuthVerifyCode,
     AuthVerifyPassword,
+    InvitedActivityResponse,
     ImportResponse,
     LogItem,
     RuntimeSettings,
     StatusResponse,
     TargetItem,
 )
+from app.services.activity_analytics import get_invited_activity, trigger_activity_backfill
 from app.services.connector_sync import sync_outreach_to_inbox
 from app.services.csv_import import import_targets_file
 from app.services.inviter import InviteService
@@ -555,3 +557,22 @@ async def api_reset_outreach():
             t.outreach_error = None
         await db.commit()
     return {"ok": True}
+
+
+@router.get("/analytics/invited", response_model=InvitedActivityResponse)
+async def api_invited_activity(
+    sort: Literal["total", "messages", "reactions", "invited_at", "username", "last_active"] = "total",
+    invited_only: bool = True,
+):
+    """Активность приглашённых в чате (сообщения/реакции из ShadowChat)."""
+    async with async_session_factory() as db:
+        return await get_invited_activity(db, sort=sort, invited_only=invited_only)
+
+
+@router.post("/analytics/backfill")
+async def api_activity_backfill():
+    """Пересчитать активность из истории чата verdi114 в ShadowChat."""
+    try:
+        return await trigger_activity_backfill()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

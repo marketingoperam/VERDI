@@ -31,6 +31,8 @@ export class IntegrationsController {
       username: body.username,
       firstName: body.firstName,
       lastName: body.lastName,
+      source: 'inviting',
+      invitedAt: sentAt,
       messages: [
         {
           direction: 'outbound',

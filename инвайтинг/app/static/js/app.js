@@ -47,6 +47,7 @@ const App = {
 
   loadPage(page) {
     if (page === 'targets') this.loadTargets();
+    if (page === 'analytics') this.loadAnalytics();
     if (page === 'logs') this.loadLogs();
     if (page === 'accounts') this.loadAccounts();
     if (page === 'control') this.refresh();
@@ -445,6 +446,62 @@ const App = {
     } catch (e) { this.toast(e.message, 'error'); }
   },
 
+  renderAnalyticsCards(data) {
+    const el = document.getElementById('analyticsCards');
+    if (!el) return;
+    const chatLabel = data.mirror_username ? `@${data.mirror_username}` : 'чат';
+    const reach = data.shadowchat_reachable
+      ? `<span class="badge success">ShadowChat OK</span>`
+      : `<span class="badge error">ShadowChat недоступен</span>`;
+    el.innerHTML = `
+      <div class="card"><div class="card-label">Приглашено</div><div class="card-value">${data.invited_total}</div></div>
+      <div class="card"><div class="card-label">С активностью</div><div class="card-value success">${data.with_activity}</div></div>
+      <div class="card"><div class="card-label">Сообщений</div><div class="card-value">${data.messages_total}</div></div>
+      <div class="card"><div class="card-label">Реакций</div><div class="card-value">${data.reactions_total}</div></div>
+      <div class="card"><div class="card-label">Чат</div><div class="card-value" style="font-size:1rem">${chatLabel} ${reach}</div></div>
+    `;
+  },
+
+  async loadAnalytics(silent = false) {
+    const el = document.getElementById('analyticsTable');
+    if (!el) return;
+    const sort = document.getElementById('analyticsSort')?.value || 'total';
+    try {
+      const data = await this.api(`/analytics/invited?sort=${encodeURIComponent(sort)}`);
+      this.renderAnalyticsCards(data);
+      if (!data.items.length) {
+        el.innerHTML = `<div class="hint">Нет приглашённых пользователей или ShadowChat ещё не собрал активность.<br>
+          Запустите <code>shadowchat/start.bat</code> и нажмите «Сканировать историю».</div>`;
+        return;
+      }
+      el.innerHTML = `<table><thead><tr>
+        <th>Пользователь</th><th>Инвайт</th><th>Отписка</th><th>Сообщения</th><th>Реакции</th><th>Всего</th><th>Последняя активность</th>
+      </tr></thead><tbody>
+        ${data.items.map(r => `<tr>
+          <td>${r.username ? `<code>@${this.escape(r.username)}</code>` : `<code>${r.user_id || '—'}</code>`}</td>
+          <td style="color:var(--muted)">${this.dt(r.invited_at)}</td>
+          <td>${r.is_messaged ? '<span class="badge success">dm</span>' : '<span class="badge">—</span>'}</td>
+          <td><span class="badge">${r.message_count}</span></td>
+          <td><span class="badge">${r.reaction_count}</span></td>
+          <td><strong>${r.total_count}</strong></td>
+          <td style="color:var(--muted)">${r.last_active_at ? this.dt(r.last_active_at) : (r.has_activity ? '—' : '<span style="opacity:.6">нет в чате</span>')}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+    } catch (e) {
+      if (!silent) this.toast(e.message, 'error');
+    }
+  },
+
+  async backfillAnalytics() {
+    try {
+      this.toast('Сканирование истории чата…', 'info');
+      const result = await this.api('/analytics/backfill', { method: 'POST' });
+      const recorded = result.recorded ?? result.chats ?? '—';
+      this.toast(`Готово: ${recorded} событий обработано`, 'success');
+      await this.loadAnalytics(true);
+    } catch (e) { this.toast(e.message, 'error'); }
+  },
+
   badgeStatus(status) {
     if (status === 'success' || status === 'outreach_ok') return `<span class="badge success">${this.escape(status)}</span>`;
     return `<span class="badge error">${this.escape(status)}</span>`;
@@ -481,6 +538,7 @@ const App = {
         <p><strong>4)</strong> В «Управление»: укажите ссылку, списки имён аккаунтов (разные пулы), текст отписки, загрузите базу юзернеймов</p>
         <p><strong>5)</strong> «Старт» — инвайт; если отписка включена, она тоже стартует. Можно отдельно «Старт отписки»</p>
         <p><strong>6)</strong> Отписка автоматически попадает в <a href="https://verdi-connector-web.onrender.com/inbox" target="_blank" rel="noopener">Operator Inbox</a> (нужны <code>INV_CONNECTOR_API_URL</code> + <code>INV_CONNECTOR_SYNC_SECRET</code> в <code>.env</code>)</p>
+        <p><strong>7)</strong> Вкладка <strong>Аналитика</strong> — активность приглашённых в <code>@verdi114</code> (нужен запущенный ShadowChat на <code>8001</code>)</p>
         <hr style="border:0;border-top:1px solid var(--border);margin:16px 0" />
         <p><strong>Важно:</strong> один аккаунт не должен быть одновременно инвайтером и отписчиком. Не используйте ту же сессию на Render/ShadowChat.</p>
         <p><strong>Очередь отписки:</strong> пишем только тем, у кого уже <code>invited</code> и ещё нет <code>dm</code>.</p>

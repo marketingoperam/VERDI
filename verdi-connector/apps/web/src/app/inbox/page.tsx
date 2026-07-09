@@ -191,7 +191,10 @@ export default function InboxPage() {
     <div className={inboxClass}>
       <aside className="sidebar">
         <header>
-          <h2>Диалоги</h2>
+          <div className="inbox-top-nav">
+            <h2>Диалоги</h2>
+            <a href="/analytics" className="nav-link">Аналитика</a>
+          </div>
           <button type="button" className="secondary" onClick={() => token && void loadConversations(token)}>
             Обновить
           </button>

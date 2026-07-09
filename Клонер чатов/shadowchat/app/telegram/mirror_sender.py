@@ -55,12 +55,12 @@ class MirrorSender:
             username = (mirror_chat.mirror_username or "").strip().lstrip("@")
             if not username:
                 raise
+            channel = await client.get_entity(username)
             try:
-                channel = await client.get_entity(username)
                 await client(JoinChannelRequest(channel=channel))
             except UserAlreadyParticipantError:
                 pass
-            return await client.get_entity(mirror_chat.telegram_chat_id)
+            return channel
 
     async def send_mirror_message(
         self,

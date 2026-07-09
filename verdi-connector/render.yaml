@@ -33,7 +33,7 @@ services:
       - key: TELEGRAM_SESSION
         value: listener_main
       - key: TELEGRAM_SESSIONS
-        value: "listener_main,tech_4,tech_5,tech_6"
+        value: "listener_main,tech_4,tech_5,tech_6,outreach1"
       - key: TELEGRAM_API_ID
         value: "30268202"
       - key: TELEGRAM_API_HASH
@@ -45,6 +45,8 @@ services:
       - key: TELEGRAM_SESSION_B64_tech_5
         sync: false
       - key: TELEGRAM_SESSION_B64_tech_6
+        sync: false
+      - key: TELEGRAM_SESSION_STRING_outreach1
         sync: false
       - key: TELEGRAM_PYTHON
         value: python3
@@ -69,6 +71,8 @@ services:
       - key: SEED_OPERATOR_NAME
         value: "@andf1n"
       - key: INVITE_SYNC_SECRET
+        sync: false
+      - key: SHADOWCHAT_API_URL
         sync: false
 
   - type: web

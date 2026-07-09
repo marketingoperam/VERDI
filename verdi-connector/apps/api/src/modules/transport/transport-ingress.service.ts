@@ -80,16 +80,23 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
         phoneMasked: username ?? account.phoneMasked,
       },
     });
-    const selfLeads = await this.prisma.lead.findMany({
-      where: {
-        OR: [
-          { telegramUserId: meId },
-          ...(username ? [{ username: { equals: username, mode: 'insensitive' as const } }] : []),
-          { username: { equals: 'telegram', mode: 'insensitive' } },
-          { telegramUserId: BigInt(777000) },
-        ],
-      },
-      select: { id: true },
+    const selfLeads = (
+      await this.prisma.lead.findMany({
+        where: {
+          OR: [
+            { telegramUserId: meId },
+            { telegramUserId: BigInt(777000) },
+            ...(username ? [{ username }] : []),
+            { username: 'telegram' },
+          ],
+        },
+        select: { id: true, username: true, telegramUserId: true },
+      })
+    ).filter((lead) => {
+      if (lead.telegramUserId === meId || lead.telegramUserId === BigInt(777000)) return true;
+      if (!username) return false;
+      const stored = (lead.username ?? '').replace(/^@/, '').toLowerCase();
+      return stored === username.toLowerCase() || stored === 'telegram';
     });
     if (selfLeads.length === 0) return;
     const deleted = await this.prisma.conversation.deleteMany({

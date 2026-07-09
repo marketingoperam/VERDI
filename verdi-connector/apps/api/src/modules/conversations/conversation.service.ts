@@ -24,6 +24,8 @@ export interface TelegramDialogImport {
   username?: string;
   firstName?: string;
   lastName?: string;
+  source?: string;
+  invitedAt?: string;
   messages: Array<{
     direction: 'inbound' | 'outbound';
     body: string;
@@ -62,13 +64,16 @@ export class ConversationService {
         username: payload.username,
         firstName: payload.firstName,
         lastName: payload.lastName,
-        source: 'telegram_dm',
+        source: payload.source ?? 'telegram_dm',
+        invitedAt: payload.invitedAt ? new Date(payload.invitedAt) : undefined,
         tags: [],
       },
       update: {
         username: payload.username,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        ...(payload.source ? { source: payload.source } : {}),
+        ...(payload.invitedAt ? { invitedAt: new Date(payload.invitedAt) } : {}),
       },
     });
 

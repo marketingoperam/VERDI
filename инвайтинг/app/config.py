@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     connector_api_url: str = ""
     connector_sync_secret: str = ""
 
+    # ShadowChat — аналитика активности в чате verdi114
+    shadowchat_api_url: str = "http://127.0.0.1:8001"
+
     @property
     def resolved_sessions_dir(self) -> Path:
         return Path(self.sessions_dir).resolve()

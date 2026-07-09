@@ -15,6 +15,7 @@ import { TelegramCommandRelayModule } from './modules/telegram-command-relay/tel
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthController } from './modules/health/health.controller';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
     TelegramCommandRelayModule,
     CatalogModule,
     IntegrationsModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController],
 })

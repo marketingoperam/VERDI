@@ -9,14 +9,17 @@ from app.models import AppSetting
 from app.schemas import RuntimeSettings
 
 
+DEFAULT_CHAT_LINK = "https://t.me/verdi114"
+DEFAULT_OUTREACH_MESSAGE = "Привет! Добавили вас в чат VERDI — напишите, если есть вопросы."
+
 DEFAULTS = RuntimeSettings(
-    chat_link="",
+    chat_link=DEFAULT_CHAT_LINK,
     min_delay_seconds=45,
     daily_limit=50,
     inviter_sessions=["inviter_01", "inviter_02", "inviter_03", "inviter_04", "inviter_05"],
     outreach_sessions=["outreach1"],
     outreach_enabled=True,
-    outreach_message="Привет! Добавили вас в чат — напишите, если есть вопросы.",
+    outreach_message=DEFAULT_OUTREACH_MESSAGE,
     outreach_delay_seconds=60,
     outreach_daily_limit=20,
 )

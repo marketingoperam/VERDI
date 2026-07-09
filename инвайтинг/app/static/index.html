@@ -26,6 +26,7 @@
         <button class="nav-item active" data-page="control">Управление</button>
         <button class="nav-item" data-page="accounts">Аккаунты</button>
         <button class="nav-item" data-page="targets">База</button>
+        <button class="nav-item" data-page="analytics">Аналитика</button>
         <button class="nav-item" data-page="logs">Журнал</button>
         <button class="nav-item" data-page="help">Помощь</button>
       </nav>
@@ -66,7 +67,7 @@
           <div class="panel-body">
             <div class="form-group">
               <label>Ссылка на чат/канал</label>
-              <input id="s_chat_link" placeholder="https://t.me/+xxxxx или https://t.me/channelname" />
+              <input id="s_chat_link" placeholder="https://t.me/verdi114" />
               <p class="hint">Инвайтеры сначала зайдут в чат, потом будут добавлять пользователей</p>
             </div>
 
@@ -100,7 +101,7 @@
             </div>
             <div class="form-group">
               <label>Текст сообщения</label>
-              <textarea id="s_outreach_msg" rows="4" placeholder="Привет! Добавили вас в чат…"></textarea>
+              <textarea id="s_outreach_msg" rows="4" placeholder="Привет! Добавили вас в чат VERDI…"></textarea>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -181,6 +182,38 @@
         </div>
         <div class="panel">
           <div class="panel-body table-wrap" id="targetsTable"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-analytics">
+        <div class="page-header">
+          <div>
+            <h2>Аналитика активности</h2>
+            <p>Сообщения и реакции приглашённых в чате <code>@verdi114</code></p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="App.loadAnalytics()">↻ Обновить</button>
+            <button class="btn btn-secondary btn-sm" onclick="App.backfillAnalytics()">Сканировать историю</button>
+          </div>
+        </div>
+
+        <div class="cards" id="analyticsCards"></div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Приглашённые</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="analyticsSort" class="input-select" onchange="App.loadAnalytics(true)">
+                <option value="total">По активности</option>
+                <option value="messages">По сообщениям</option>
+                <option value="reactions">По реакциям</option>
+                <option value="invited_at">По дате инвайта</option>
+                <option value="last_active">По последней активности</option>
+                <option value="username">По username</option>
+              </select>
+            </div>
+          </div>
+          <div class="panel-body table-wrap" id="analyticsTable"></div>
         </div>
       </section>
 
