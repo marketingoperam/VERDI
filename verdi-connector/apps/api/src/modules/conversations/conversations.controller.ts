@@ -26,6 +26,11 @@ export class ConversationsController {
     return serializeBigInt(rows);
   }
 
+  @Get('stats/today')
+  async statsToday() {
+    return this.conversations.getTodayReplyStats();
+  }
+
   @Get(':id')
   async get(@Param('id') id: string) {
     return serializeBigInt(await this.conversations.getConversation(id));

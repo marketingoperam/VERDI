@@ -225,6 +225,16 @@ button.secondary { background: #2a3142; }
   gap: 8px;
 }
 
+.inbox-today-stat {
+  margin: 2px 0 8px;
+  font-size: 0.88rem;
+  color: #93a0b8;
+}
+.inbox-today-stat strong {
+  color: #e8ecf5;
+  font-weight: 600;
+}
+
 .analytics-page {
   min-height: 100vh;
   padding: 20px;

@@ -393,6 +393,36 @@ export class ConversationService {
       ];
     }
 
+    const { excludeTelegramIds, excludeUsernames } = await this.techExcludeSets();
+
+    const rows = await this.prisma.conversation.findMany({
+      where,
+      include: {
+        lead: true,
+        technicalAccount: true,
+        assignedOperator: true,
+      },
+      orderBy: [{ lastInboundAt: 'desc' }, { lastOutboundAt: 'desc' }, { updatedAt: 'desc' }],
+    });
+
+    // Client inbox only — hide Saved Messages / self chat / service chats / tech accounts.
+    return rows.filter((row) => this.isClientConversation(row, excludeTelegramIds, excludeUsernames));
+  }
+
+  private startOfTodayMoscow(): Date {
+    const day = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Moscow',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    return new Date(`${day}T00:00:00+03:00`);
+  }
+
+  private async techExcludeSets(): Promise<{
+    excludeTelegramIds: Set<string>;
+    excludeUsernames: Set<string>;
+  }> {
     const techAccounts = await this.prisma.technicalAccount.findMany();
     const excludeTelegramIds = new Set<string>(['777000', '42777']);
     const excludeUsernames = new Set<string>(['telegram']);
@@ -411,28 +441,57 @@ export class ConversationService {
         }
       }
     }
+    return { excludeTelegramIds, excludeUsernames };
+  }
 
-    const rows = await this.prisma.conversation.findMany({
-      where,
-      include: {
-        lead: true,
-        technicalAccount: true,
-        assignedOperator: true,
+  private isClientConversation(
+    row: {
+      lead: { telegramUserId: bigint; username: string | null };
+      technicalAccount: { telegramUserId: bigint | null };
+    },
+    excludeTelegramIds: Set<string>,
+    excludeUsernames: Set<string>,
+  ): boolean {
+    const leadId = row.lead.telegramUserId.toString();
+    const leadUsername = (row.lead.username ?? '').toLowerCase();
+    if (excludeTelegramIds.has(leadId)) return false;
+    if (leadUsername && excludeUsernames.has(leadUsername)) return false;
+    if (row.technicalAccount.telegramUserId != null) {
+      if (row.technicalAccount.telegramUserId.toString() === leadId) return false;
+    }
+    return true;
+  }
+
+  /** Уникальные люди (лиды), у которых сегодня было inbound-сообщение. */
+  async getTodayReplyStats(): Promise<{ repliedToday: number; since: string }> {
+    const since = this.startOfTodayMoscow();
+    const { excludeTelegramIds, excludeUsernames } = await this.techExcludeSets();
+
+    const rows = await this.prisma.message.findMany({
+      where: {
+        direction: 'inbound',
+        createdAt: { gte: since },
       },
-      orderBy: [{ lastInboundAt: 'desc' }, { lastOutboundAt: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        conversation: {
+          select: {
+            leadId: true,
+            lead: { select: { telegramUserId: true, username: true } },
+            technicalAccount: { select: { telegramUserId: true } },
+          },
+        },
+      },
     });
 
-    // Client inbox only — hide Saved Messages / self chat / service chats / tech accounts.
-    return rows.filter((row) => {
-      const leadId = row.lead.telegramUserId.toString();
-      const leadUsername = (row.lead.username ?? '').toLowerCase();
-      if (excludeTelegramIds.has(leadId)) return false;
-      if (leadUsername && excludeUsernames.has(leadUsername)) return false;
-      if (row.technicalAccount.telegramUserId != null) {
-        if (row.technicalAccount.telegramUserId.toString() === leadId) return false;
+    const leadIds = new Set<string>();
+    for (const row of rows) {
+      if (!this.isClientConversation(row.conversation, excludeTelegramIds, excludeUsernames)) {
+        continue;
       }
-      return true;
-    });
+      leadIds.add(row.conversation.leadId);
+    }
+
+    return { repliedToday: leadIds.size, since: since.toISOString() };
   }
 
   async getConversation(id: string) {

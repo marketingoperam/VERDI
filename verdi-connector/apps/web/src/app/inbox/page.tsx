@@ -57,6 +57,7 @@ export default function InboxPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [repliedToday, setRepliedToday] = useState(0);
   const [accounts, setAccounts] = useState<TechAccount[]>([]);
   const [accountId, setAccountId] = useState<string>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -116,6 +117,7 @@ export default function InboxPage() {
       if (!token) return;
       const detail = await api<Conversation>(`/conversations/${conversationId}`, token);
       setConversations((prev) => prev.map((c) => (c.id === conversationId ? { ...c, ...detail } : c)));
+      void loadRepliedToday(token);
     });
     socket.on('outbox.updated', (payload: { blockReason?: string; sendStatus: string }) => {
       setStatus(`${payload.sendStatus}${payload.blockReason ? `: ${payload.blockReason}` : ''}`);
@@ -124,6 +126,15 @@ export default function InboxPage() {
       socket.disconnect();
     };
   }, [token, accountId]);
+
+  async function loadRepliedToday(authToken: string) {
+    try {
+      const stats = await api<{ repliedToday: number }>('/conversations/stats/today', authToken);
+      setRepliedToday(stats.repliedToday ?? 0);
+    } catch {
+      // non-blocking
+    }
+  }
 
   async function loadConversations(authToken: string) {
     const params = new URLSearchParams();
@@ -136,6 +147,7 @@ export default function InboxPage() {
       setSelectedId((prev) => (prev && rows.some((r) => r.id === prev) ? prev : null));
       setMobileView('list');
       setStatus('');
+      void loadRepliedToday(authToken);
     } catch (err) {
       const message = (err as Error).message;
       if (message === 'Unauthorized') {
@@ -200,6 +212,9 @@ export default function InboxPage() {
           <div className="inbox-top-nav">
             <h2>Диалоги</h2>
             <a href="/analytics" className="nav-link">Аналитика</a>
+          </div>
+          <div className="inbox-today-stat">
+            Ответили сегодня: <strong>{repliedToday}</strong>
           </div>
           <button type="button" className="secondary" onClick={() => token && void loadConversations(token)}>
             Обновить
