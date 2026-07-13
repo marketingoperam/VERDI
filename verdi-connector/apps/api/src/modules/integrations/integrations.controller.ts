@@ -1,16 +1,40 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { IsOptional, IsString } from 'class-validator';
 import { ConversationService } from '../conversations/conversation.service';
 import { InviteSyncGuard } from './invite-sync.guard';
 
 class InvitingOutreachBody {
+  @IsString()
   sessionName!: string;
+
+  @IsString()
   peerTelegramUserId!: string;
+
+  @IsOptional()
+  @IsString()
   externalChatId?: string;
+
+  @IsOptional()
+  @IsString()
   username?: string;
+
+  @IsOptional()
+  @IsString()
   firstName?: string;
+
+  @IsOptional()
+  @IsString()
   lastName?: string;
+
+  @IsString()
   body!: string;
+
+  @IsOptional()
+  @IsString()
   telegramMessageId?: string;
+
+  @IsOptional()
+  @IsString()
   sentAt?: string;
 }
 
