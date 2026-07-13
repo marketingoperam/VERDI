@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -22,28 +22,63 @@ export class TransportController {
   }
 
   @Post('sync')
+  @HttpCode(200)
   @Roles('admin', 'supervisor', 'operator')
   async sync(
     @Query('sessionName') sessionName?: string,
     @Query('limitDialogs') limitDialogs?: string,
     @Query('limitMessages') limitMessages?: string,
+    @Query('connectedOnly') connectedOnly?: string,
   ) {
-    const sessions = sessionName
+    const onlyConnected = connectedOnly !== '0' && connectedOnly !== 'false';
+    const dialogLimit = limitDialogs ? Number(limitDialogs) : 20;
+    const messageLimit = limitMessages ? Number(limitMessages) : 30;
+
+    const configured = sessionName
       ? [sessionName]
       : this.adapter.configuredSessions();
+    const statuses = this.adapter.getWorkerStatuses();
+    const connected = new Set(
+      statuses.filter((w) => w.connected).map((w) => w.session),
+    );
+
     const results: Array<{ session: string; dialogs?: number; error?: string }> = [];
-    for (const session of sessions) {
-      try {
-        const dialogs = await this.adapter.requestSync({
-          sessionName: session,
-          limitDialogs: limitDialogs ? Number(limitDialogs) : 40,
-          limitMessages: limitMessages ? Number(limitMessages) : 50,
+    const toSync: string[] = [];
+
+    for (const session of configured) {
+      if (onlyConnected && !connected.has(session)) {
+        results.push({
+          session,
+          error: `TRANSPORT_DISCONNECTED (${session})`,
         });
-        results.push({ session, dialogs });
-      } catch (error) {
-        results.push({ session, error: (error as Error).message });
+        continue;
       }
+      toSync.push(session);
     }
+
+    // Parallel per-session sync keeps wall-clock under Render's ~100s proxy timeout.
+    const synced = await Promise.all(
+      toSync.map(async (session) => {
+        try {
+          const dialogs = await this.adapter.requestSync({
+            sessionName: session,
+            limitDialogs: dialogLimit,
+            limitMessages: messageLimit,
+          });
+          return { session, dialogs };
+        } catch (error) {
+          return { session, error: (error as Error).message };
+        }
+      }),
+    );
+    results.push(...synced);
+
+    // Preserve configured session order in the response.
+    const order = new Map(configured.map((s, i) => [s, i]));
+    results.sort(
+      (a, b) => (order.get(a.session) ?? 999) - (order.get(b.session) ?? 999),
+    );
+
     return { ok: true, results };
   }
 

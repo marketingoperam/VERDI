@@ -363,6 +363,15 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
         pending.resolve(Number(event.dialogs ?? 0));
         break;
       }
+      case 'sync_err': {
+        const reqId = String(event.reqId ?? '');
+        const pending = runtime.pendingSyncs.get(reqId);
+        if (!pending) break;
+        clearTimeout(pending.timer);
+        runtime.pendingSyncs.delete(reqId);
+        pending.reject(new Error(String(event.error ?? 'Telegram sync failed')));
+        break;
+      }
       case 'log':
         this.logger.log(`[${runtime.session}] ${String(event.message ?? '')}`);
         break;
@@ -397,7 +406,9 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
 
   private getWorker(sessionName?: string): WorkerRuntime {
     const preferred = sessionName || this.primarySession();
-    const worker = this.workers.get(preferred) ?? this.workers.get(this.primarySession());
+    const worker = sessionName
+      ? this.workers.get(sessionName)
+      : this.workers.get(preferred) ?? this.workers.get(this.primarySession());
     if (!worker || !worker.connected) {
       throw new Error(`TRANSPORT_DISCONNECTED (${preferred})`);
     }
@@ -468,19 +479,21 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
   ): Promise<number> {
     if (this.useStub()) return Promise.resolve(0);
     const runtime = this.getWorker(options?.sessionName);
+    // Keep under Render's ~100s HTTP proxy limit even for a single slow session.
+    const syncTimeoutMs = 55_000;
     const reqId = randomUUID();
     return new Promise<number>((resolve, reject) => {
       const timer = setTimeout(() => {
         runtime.pendingSyncs.delete(reqId);
         reject(new Error('Telegram sync timeout'));
-      }, 120000);
+      }, syncTimeoutMs);
       runtime.pendingSyncs.set(reqId, { resolve, reject, timer });
       try {
         this.writeCommand(runtime, {
           cmd: 'sync',
           reqId,
-          limitDialogs: options?.limitDialogs ?? 30,
-          limitMessages: options?.limitMessages ?? 40,
+          limitDialogs: options?.limitDialogs ?? 20,
+          limitMessages: options?.limitMessages ?? 30,
         });
       } catch (error) {
         clearTimeout(timer);

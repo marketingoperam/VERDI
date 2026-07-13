@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, humanizeNetworkError } from '@/lib/api';
 
 type AnalyticsItem = {
   conversationId: string;
@@ -53,6 +53,20 @@ function fmt(iso: string | null): string {
   });
 }
 
+function formatSyncError(session: string, error: string): string {
+  const lower = error.toLowerCase();
+  if (lower.includes('transport_disconnected')) {
+    return `${session}: воркер офлайн`;
+  }
+  if (lower.includes('timeout')) {
+    return `${session}: таймаут синка`;
+  }
+  if (lower.includes('authkeyduplicated') || lower.includes('two different ip')) {
+    return `${session}: сессия занята (не запускайте локально и на Render сразу)`;
+  }
+  return `${session}: ${error}`;
+}
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -61,6 +75,7 @@ export default function AnalyticsPage() {
   const [error, setError] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState('');
+  const [statusIsError, setStatusIsError] = useState(false);
 
   useEffect(() => {
     const t = localStorage.getItem('verdi_token');
@@ -76,6 +91,7 @@ export default function AnalyticsPage() {
     const rows = await api<AnalyticsResponse>(
       `/analytics/invited?sort=${encodeURIComponent(nextSort)}`,
       authToken,
+      { timeoutMs: 45_000 },
     );
     setData(rows);
   }
@@ -83,35 +99,57 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!token) return;
     void loadAnalytics(token).catch((err: Error) => {
-      if (err.message === 'Unauthorized') {
+      if (err.message === 'Unauthorized' || (err as { status?: number }).status === 401) {
         localStorage.removeItem('verdi_token');
         router.replace('/');
         return;
       }
-      setError(err.message);
+      setError(humanizeNetworkError(err));
     });
   }, [token, sort, router]);
 
   async function syncFromTelegram() {
     if (!token || syncing) return;
     setSyncing(true);
+    setStatusIsError(false);
     setStatus('Синхронизация Telegram…');
     try {
+      // connectedOnly + shorter limits: finish before Render ~100s proxy cut.
       const result = await api<{ results: Array<{ session: string; dialogs?: number; error?: string }> }>(
-        '/transport/sync',
+        '/transport/sync?connectedOnly=1&limitDialogs=20&limitMessages=30',
         token,
-        { method: 'POST' },
+        { method: 'POST', timeoutMs: 90_000 },
       );
       const ok = result.results.filter((r) => !r.error).length;
       const fail = result.results.filter((r) => r.error);
-      setStatus(
-        fail.length
-          ? `Синк: ${ok} ок, ошибки: ${fail.map((f) => `${f.session}: ${f.error}`).join('; ')}`
-          : `Синк готов (${ok} аккаунтов)`,
-      );
+      const offline = fail.filter((f) => (f.error ?? '').includes('TRANSPORT_DISCONNECTED'));
+      const hardFail = fail.filter((f) => !(f.error ?? '').includes('TRANSPORT_DISCONNECTED'));
+
+      if (hardFail.length) {
+        setStatusIsError(true);
+        setStatus(
+          `Синк: ${ok} ок. Ошибки: ${hardFail.map((f) => formatSyncError(f.session, f.error ?? '')).join('; ')}` +
+            (offline.length ? ` · Офлайн: ${offline.map((f) => f.session).join(', ')}` : ''),
+        );
+      } else if (ok === 0) {
+        setStatusIsError(true);
+        setStatus(
+          offline.length
+            ? `Нет подключённых Telegram-воркеров (${offline.map((f) => f.session).join(', ')}). Запустите сессии только на Render.`
+            : 'Синхронизация не выполнена ни для одного аккаунта.',
+        );
+      } else {
+        setStatusIsError(false);
+        setStatus(
+          offline.length
+            ? `Синк готов (${ok} аккаунтов). Офлайн: ${offline.map((f) => f.session).join(', ')}`
+            : `Синк готов (${ok} аккаунтов)`,
+        );
+      }
       await loadAnalytics(token);
     } catch (err) {
-      setStatus((err as Error).message);
+      setStatusIsError(true);
+      setStatus(humanizeNetworkError(err));
     } finally {
       setSyncing(false);
     }
@@ -128,13 +166,15 @@ export default function AnalyticsPage() {
             Активность в инбоксе и в чате{' '}
             {data?.mirrorUsername ? `@${data.mirrorUsername}` : '@verdi114'}
           </p>
-          {!data?.shadowchatReachable && (
+          {data && !data.shadowchatReachable && (
             <p className="hint-warn">
               Активность в чате @verdi114 сейчас недоступна с Render (ShadowChat локальный).
               В таблице обновляется переписка из Telegram DM.
             </p>
           )}
-          {status && <p className="hint-status">{status}</p>}
+          {status && (
+            <p className={statusIsError ? 'error' : 'hint-status'}>{status}</p>
+          )}
         </div>
         <div className="analytics-actions">
           <Link href="/inbox" className="nav-link">

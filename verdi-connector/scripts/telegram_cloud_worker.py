@@ -153,51 +153,54 @@ async def handle_send(client: TelegramClient, req: dict) -> None:
 
 async def handle_sync(client: TelegramClient, session_name: str, me_id: int, req: dict) -> None:
     req_id = req.get("reqId", "")
-    limit_dialogs = int(req.get("limitDialogs") or 30)
-    limit_messages = int(req.get("limitMessages") or 40)
-    count = 0
-    async for dialog in client.iter_dialogs(limit=limit_dialogs):
-        entity = dialog.entity
-        # Only real clients: skip bots, Saved Messages (self), and official Telegram service user.
-        if not isinstance(entity, User) or entity.bot or getattr(entity, "is_self", False):
-            continue
-        if int(entity.id) in {777000, 42777} or (entity.username or "").lower() == "telegram":
-            continue
-        if int(entity.id) == int(me_id):
-            continue
-        messages = await client.get_messages(entity, limit=limit_messages)
-        payload_messages = []
-        for msg in reversed(list(messages)):
-            if not msg.message:
+    try:
+        limit_dialogs = int(req.get("limitDialogs") or 30)
+        limit_messages = int(req.get("limitMessages") or 40)
+        count = 0
+        async for dialog in client.iter_dialogs(limit=limit_dialogs):
+            entity = dialog.entity
+            # Only real clients: skip bots, Saved Messages (self), and official Telegram service user.
+            if not isinstance(entity, User) or entity.bot or getattr(entity, "is_self", False):
                 continue
-            sent_at = msg.date
-            if sent_at.tzinfo is None:
-                sent_at = sent_at.replace(tzinfo=timezone.utc)
-            payload_messages.append(
+            if int(entity.id) in {777000, 42777} or (entity.username or "").lower() == "telegram":
+                continue
+            if int(entity.id) == int(me_id):
+                continue
+            messages = await client.get_messages(entity, limit=limit_messages)
+            payload_messages = []
+            for msg in reversed(list(messages)):
+                if not msg.message:
+                    continue
+                sent_at = msg.date
+                if sent_at.tzinfo is None:
+                    sent_at = sent_at.replace(tzinfo=timezone.utc)
+                payload_messages.append(
+                    {
+                        "direction": "outbound" if msg.out else "inbound",
+                        "body": msg.message,
+                        "telegramMessageId": str(msg.id),
+                        "sentAt": sent_at.isoformat(),
+                    }
+                )
+            if not payload_messages:
+                continue
+            emit(
                 {
-                    "direction": "outbound" if msg.out else "inbound",
-                    "body": msg.message,
-                    "telegramMessageId": str(msg.id),
-                    "sentAt": sent_at.isoformat(),
+                    "type": "sync_dialog",
+                    "reqId": req_id,
+                    "sessionName": session_name,
+                    "externalChatId": str(entity.id),
+                    "peerTelegramUserId": str(entity.id),
+                    "username": entity.username,
+                    "firstName": entity.first_name,
+                    "lastName": entity.last_name,
+                    "messages": payload_messages,
                 }
             )
-        if not payload_messages:
-            continue
-        emit(
-            {
-                "type": "sync_dialog",
-                "reqId": req_id,
-                "sessionName": session_name,
-                "externalChatId": str(entity.id),
-                "peerTelegramUserId": str(entity.id),
-                "username": entity.username,
-                "firstName": entity.first_name,
-                "lastName": entity.last_name,
-                "messages": payload_messages,
-            }
-        )
-        count += 1
-    emit({"type": "sync_done", "reqId": req_id, "dialogs": count, "meId": str(me_id)})
+            count += 1
+        emit({"type": "sync_done", "reqId": req_id, "dialogs": count, "meId": str(me_id)})
+    except Exception as exc:  # noqa: BLE001
+        emit({"type": "sync_err", "reqId": req_id, "error": str(exc)})
 
 
 async def stdin_loop(client: TelegramClient, session_name: str, me_id: int, queue: asyncio.Queue) -> None:
