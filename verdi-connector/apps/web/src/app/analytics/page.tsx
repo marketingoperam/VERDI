@@ -71,10 +71,18 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (!token) return;
+    setError('');
     void api<AnalyticsResponse>(`/analytics/invited?sort=${encodeURIComponent(sort)}`, token)
       .then(setData)
-      .catch((err: Error) => setError(err.message));
-  }, [token, sort]);
+      .catch((err: Error) => {
+        if (err.message === 'Unauthorized') {
+          localStorage.removeItem('verdi_token');
+          router.replace('/');
+          return;
+        }
+        setError(err.message);
+      });
+  }, [token, sort, router]);
 
   if (!token) return null;
 

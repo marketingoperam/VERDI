@@ -137,7 +137,13 @@ export default function InboxPage() {
       setMobileView('list');
       setStatus('');
     } catch (err) {
-      setStatus((err as Error).message);
+      const message = (err as Error).message;
+      if (message === 'Unauthorized') {
+        localStorage.removeItem('verdi_token');
+        router.replace('/');
+        return;
+      }
+      setStatus(message);
     }
   }
 
