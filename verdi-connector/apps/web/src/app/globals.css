@@ -240,6 +240,8 @@ button.secondary { background: #2a3142; }
 }
 .analytics-header h1 { margin: 0 0 6px; font-size: 1.4rem; }
 .analytics-header p { margin: 0; color: #93a0b8; }
+.analytics-header .hint-warn { color: #ffb454; font-size: 0.85rem; margin-top: 8px; }
+.analytics-header .hint-status { color: #9eb0ff; font-size: 0.85rem; margin-top: 6px; }
 .analytics-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .analytics-cards {
   display: grid;

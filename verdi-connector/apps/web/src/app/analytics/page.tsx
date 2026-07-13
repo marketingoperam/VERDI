@@ -59,6 +59,8 @@ export default function AnalyticsPage() {
   const [sort, setSort] = useState('total');
   const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [error, setError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     const t = localStorage.getItem('verdi_token');
@@ -69,20 +71,51 @@ export default function AnalyticsPage() {
     setToken(t);
   }, [router]);
 
+  async function loadAnalytics(authToken: string, nextSort = sort) {
+    setError('');
+    const rows = await api<AnalyticsResponse>(
+      `/analytics/invited?sort=${encodeURIComponent(nextSort)}`,
+      authToken,
+    );
+    setData(rows);
+  }
+
   useEffect(() => {
     if (!token) return;
-    setError('');
-    void api<AnalyticsResponse>(`/analytics/invited?sort=${encodeURIComponent(sort)}`, token)
-      .then(setData)
-      .catch((err: Error) => {
-        if (err.message === 'Unauthorized') {
-          localStorage.removeItem('verdi_token');
-          router.replace('/');
-          return;
-        }
-        setError(err.message);
-      });
+    void loadAnalytics(token).catch((err: Error) => {
+      if (err.message === 'Unauthorized') {
+        localStorage.removeItem('verdi_token');
+        router.replace('/');
+        return;
+      }
+      setError(err.message);
+    });
   }, [token, sort, router]);
+
+  async function syncFromTelegram() {
+    if (!token || syncing) return;
+    setSyncing(true);
+    setStatus('Синхронизация Telegram…');
+    try {
+      const result = await api<{ results: Array<{ session: string; dialogs?: number; error?: string }> }>(
+        '/transport/sync',
+        token,
+        { method: 'POST' },
+      );
+      const ok = result.results.filter((r) => !r.error).length;
+      const fail = result.results.filter((r) => r.error);
+      setStatus(
+        fail.length
+          ? `Синк: ${ok} ок, ошибки: ${fail.map((f) => `${f.session}: ${f.error}`).join('; ')}`
+          : `Синк готов (${ok} аккаунтов)`,
+      );
+      await loadAnalytics(token);
+    } catch (err) {
+      setStatus((err as Error).message);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   if (!token) return null;
 
@@ -95,11 +128,21 @@ export default function AnalyticsPage() {
             Активность в инбоксе и в чате{' '}
             {data?.mirrorUsername ? `@${data.mirrorUsername}` : '@verdi114'}
           </p>
+          {!data?.shadowchatReachable && (
+            <p className="hint-warn">
+              Активность в чате @verdi114 сейчас недоступна с Render (ShadowChat локальный).
+              В таблице обновляется переписка из Telegram DM.
+            </p>
+          )}
+          {status && <p className="hint-status">{status}</p>}
         </div>
         <div className="analytics-actions">
           <Link href="/inbox" className="nav-link">
             ← Диалоги
           </Link>
+          <button type="button" className="secondary" disabled={syncing} onClick={() => void syncFromTelegram()}>
+            {syncing ? 'Синхронизация…' : 'Обновить из Telegram'}
+          </button>
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
             <option value="total">По общей активности</option>
             <option value="chat">По чату verdi114</option>

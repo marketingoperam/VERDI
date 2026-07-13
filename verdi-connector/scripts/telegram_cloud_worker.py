@@ -317,6 +317,39 @@ async def main_async(args: argparse.Namespace) -> None:
             }
         )
 
+    @client.on(events.NewMessage(outgoing=True))
+    async def on_outgoing_message(event: events.NewMessage.Event) -> None:  # noqa: N802
+        """Catch DMs sent from Telegram app (not only Operator Inbox)."""
+        if not event.is_private:
+            return
+        peer = await event.get_chat()
+        if not isinstance(peer, User) or peer.bot or getattr(peer, "is_self", False):
+            return
+        if int(peer.id) in {777000, 42777, me_id}:
+            return
+        if (peer.username or "").lower() == "telegram":
+            return
+        text = event.raw_text or ""
+        if not text.strip():
+            return
+        sent_at = event.message.date
+        if sent_at.tzinfo is None:
+            sent_at = sent_at.replace(tzinfo=timezone.utc)
+        emit(
+            {
+                "type": "outbound",
+                "sessionName": session,
+                "externalChatId": str(peer.id),
+                "telegramMessageId": str(event.message.id),
+                "peerTelegramUserId": str(peer.id),
+                "peerUsername": peer.username,
+                "peerFirstName": peer.first_name,
+                "peerLastName": peer.last_name,
+                "body": text,
+                "sentAt": sent_at.isoformat(),
+            }
+        )
+
     stop_queue: asyncio.Queue = asyncio.Queue()
     reader = asyncio.create_task(stdin_loop(client, session, me_id, stop_queue))
     await stop_queue.get()

@@ -125,6 +125,29 @@ export class AnalyticsService {
   async invitedActivity(sort = 'total'): Promise<InvitedAnalyticsResponse> {
     const chatActivity = await this.loadChatActivity();
 
+    const techAccounts = await this.prisma.technicalAccount.findMany({
+      select: { telegramUserId: true, sessionName: true, title: true, phoneMasked: true },
+    });
+    const selfUserIds = new Set(
+      techAccounts
+        .map((a) => (a.telegramUserId != null ? String(a.telegramUserId) : null))
+        .filter(Boolean) as string[],
+    );
+    const selfUsernames = new Set(
+      techAccounts
+        .flatMap((a) => [a.sessionName, a.title, a.phoneMasked])
+        .map((v) => normalizeUsername(v))
+        .filter(Boolean) as string[],
+    );
+    // account title like @andf1n
+    for (const a of techAccounts) {
+      const fromTitle = normalizeUsername(a.title?.replace(/^@/, ''));
+      if (fromTitle) selfUsernames.add(fromTitle);
+    }
+    selfUserIds.add('777000');
+    selfUsernames.add('telegram');
+    selfUsernames.add('andf1n');
+
     const conversations = await this.prisma.conversation.findMany({
       include: {
         lead: true,
@@ -136,7 +159,16 @@ export class AnalyticsService {
       orderBy: [{ updatedAt: 'desc' }],
     });
 
-    const items: InvitedAnalyticsItem[] = conversations.map((conversation) => {
+    const items: InvitedAnalyticsItem[] = conversations
+      .filter((conversation) => {
+        const lead = conversation.lead;
+        const uid = String(lead.telegramUserId);
+        const uname = normalizeUsername(lead.username);
+        if (selfUserIds.has(uid)) return false;
+        if (uname && selfUsernames.has(uname)) return false;
+        return true;
+      })
+      .map((conversation) => {
       const lead = conversation.lead;
       const inboxInbound = conversation.messages.filter((m) => m.direction === 'inbound').length;
       const inboxOutbound = conversation.messages.filter((m) => m.direction === 'outbound').length;

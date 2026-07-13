@@ -48,6 +48,31 @@ export class TransportIngressService implements OnModuleInit, OnApplicationBoots
           this.config.get<string>('TELEGRAM_SESSION', 'listener_main'),
       });
     });
+    this.adapter.on('outbound', async (payload: Record<string, unknown> & {
+      externalChatId: string;
+      telegramMessageId: string;
+      peerTelegramUserId: string;
+      peerUsername?: string;
+      peerFirstName?: string;
+      peerLastName?: string;
+      body: string;
+      sentAt: Date;
+      sessionName?: string;
+    }) => {
+      await this.conversations.handleOutbound({
+        externalChatId: payload.externalChatId,
+        telegramMessageId: payload.telegramMessageId,
+        peerTelegramUserId: payload.peerTelegramUserId,
+        peerUsername: payload.peerUsername,
+        peerFirstName: payload.peerFirstName,
+        peerLastName: payload.peerLastName,
+        body: payload.body,
+        sentAt: payload.sentAt,
+        sessionName:
+          payload.sessionName ??
+          this.config.get<string>('TELEGRAM_SESSION', 'listener_main'),
+      });
+    });
     this.adapter.on('sync-dialog', (payload: Record<string, unknown>) => {
       const dialog: TelegramDialogImport = {
         sessionName: payload.sessionName ? String(payload.sessionName) : undefined,

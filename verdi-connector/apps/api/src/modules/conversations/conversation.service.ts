@@ -16,6 +16,18 @@ export interface InboundEvent {
   sessionName?: string;
 }
 
+export interface OutboundEvent {
+  externalChatId: string;
+  telegramMessageId: string;
+  peerTelegramUserId: string;
+  peerUsername?: string;
+  peerFirstName?: string;
+  peerLastName?: string;
+  body: string;
+  sentAt: Date;
+  sessionName?: string;
+}
+
 export interface TelegramDialogImport {
   /** ShadowChat/Telethon session name, e.g. tech_13309563469 */
   sessionName?: string;
@@ -264,6 +276,100 @@ export class ConversationService {
     });
 
     await this.riskControl.onHealthyReplyExchange(account.id);
+    this.realtime.emitConversationUpdated(updated);
+    this.realtime.emitMessageCreated(conversation.id, message);
+  }
+
+  async handleOutbound(event: OutboundEvent): Promise<void> {
+    const sessionName = event.sessionName;
+    const account = sessionName
+      ? ((await this.prisma.technicalAccount.findFirst({
+          where: { sessionName, status: { in: ['active', 'limited'] } },
+        })) ??
+        (await this.prisma.technicalAccount.create({
+          data: {
+            title: sessionName === 'listener_main' ? '@andf1n' : sessionName,
+            sessionName,
+            status: 'active',
+            mode: 'reply_only',
+          },
+        })))
+      : await this.prisma.technicalAccount.findFirst({
+          where: { status: { in: ['active', 'limited'] } },
+          orderBy: { createdAt: 'asc' },
+        });
+    if (!account) return;
+
+    const lead = await this.prisma.lead.upsert({
+      where: { telegramUserId: BigInt(event.peerTelegramUserId) },
+      create: {
+        telegramUserId: BigInt(event.peerTelegramUserId),
+        username: event.peerUsername,
+        firstName: event.peerFirstName,
+        lastName: event.peerLastName,
+        source: 'telegram_dm',
+        tags: [],
+      },
+      update: {
+        username: event.peerUsername,
+        firstName: event.peerFirstName,
+        lastName: event.peerLastName,
+      },
+    });
+
+    let conversation = await this.prisma.conversation.findUnique({
+      where: {
+        leadId_technicalAccountId: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          leadId: lead.id,
+          technicalAccountId: account.id,
+          externalChatId: resolveTelegramPeerId(event.externalChatId, lead.telegramUserId),
+          state: 'active',
+          firstContactType: 'manual',
+        },
+      });
+    }
+
+    const existing = await this.prisma.message.findFirst({
+      where: {
+        conversationId: conversation.id,
+        telegramMessageId: event.telegramMessageId,
+      },
+    });
+    if (existing) return;
+
+    const message = await this.prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        direction: 'outbound',
+        senderType: 'technical_account',
+        senderId: account.id,
+        body: event.body,
+        normalizedBody: normalizeBody(event.body),
+        telegramMessageId: event.telegramMessageId,
+        deliveryStatus: 'sent',
+        createdAt: event.sentAt,
+      },
+    });
+
+    const updated = await this.prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        externalChatId: resolveTelegramPeerId(event.externalChatId, lead.telegramUserId),
+        lastOutboundAt: event.sentAt,
+        state: 'awaiting_user',
+      },
+      include: { lead: true, technicalAccount: true, assignedOperator: true },
+    });
+
     this.realtime.emitConversationUpdated(updated);
     this.realtime.emitMessageCreated(conversation.id, message);
   }

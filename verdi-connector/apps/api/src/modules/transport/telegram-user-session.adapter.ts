@@ -316,6 +316,20 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
         this.emit('inbound', message);
         break;
       }
+      case 'outbound': {
+        this.emit('outbound', {
+          externalChatId: String(event.externalChatId),
+          telegramMessageId: String(event.telegramMessageId),
+          peerTelegramUserId: String(event.peerTelegramUserId),
+          peerUsername: event.peerUsername ? String(event.peerUsername) : undefined,
+          peerFirstName: event.peerFirstName ? String(event.peerFirstName) : undefined,
+          peerLastName: event.peerLastName ? String(event.peerLastName) : undefined,
+          body: String(event.body ?? ''),
+          sentAt: new Date(String(event.sentAt ?? new Date().toISOString())),
+          sessionName: String(event.sessionName ?? runtime.session),
+        });
+        break;
+      }
       case 'send_ok': {
         const reqId = String(event.reqId ?? '');
         const pending = runtime.pendingSends.get(reqId);
@@ -503,6 +517,22 @@ export class TelegramUserSessionAdapter extends EventEmitter implements Telegram
       telegramUserId: primary?.meId,
       status: this.connected ? 'active' : 'disconnected',
     };
+  }
+
+  getWorkerStatuses(): Array<{
+    session: string;
+    connected: boolean;
+    meId?: string;
+    meUsername?: string;
+    lastFatal?: string;
+  }> {
+    return [...this.workers.values()].map((w) => ({
+      session: w.session,
+      connected: w.connected,
+      meId: w.meId,
+      meUsername: w.meUsername,
+      lastFatal: w.lastFatal,
+    }));
   }
 
   simulateInbound(message: TelegramInboundMessage): void {
